@@ -21,7 +21,10 @@
 </script>
 
 <div class="filters">
-  <div class="logo">&diams; NORDIC SCREENER</div>
+  <div class="logo">
+    <img src="/stonklens-appicon.png" alt="Stonklens" class="logo-icon" />
+    <span class="logo-text">STONKLENS</span>
+  </div>
 
   <div class="country-tabs">
     {#each [null, 'SE', 'DK', 'FI', 'NO'] as c}
@@ -46,8 +49,10 @@
 </div>
 
 <style>
-  .filters { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border); }
-  .logo { font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: var(--accent); white-space: nowrap; }
+  .filters { display: flex; align-items: center; gap: 14px; padding: 8px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border); height: 56px; }
+  .logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
+  .logo-icon { height: 36px; width: 36px; border-radius: 6px; }
+  .logo-text { font-family: var(--font-mono); font-weight: 600; font-size: 15px; color: var(--accent); letter-spacing: 3px; }
   .country-tabs { display: flex; gap: 1px; background: var(--bg); border-radius: 5px; padding: 2px; }
   .ctab {
     padding: 4px 11px; border: none; background: transparent; color: var(--text-muted);
