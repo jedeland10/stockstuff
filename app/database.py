@@ -79,11 +79,55 @@ async def _run_schema(conn: asyncpg.Connection):
                 ticker TEXT NOT NULL,
                 year INTEGER NOT NULL,
                 revenue DOUBLE PRECISION,
+                operating_income DOUBLE PRECISION,
+                ebitda DOUBLE PRECISION,
                 net_income DOUBLE PRECISION,
                 eps DOUBLE PRECISION,
                 profit_margin DOUBLE PRECISION,
                 PRIMARY KEY (ticker, year)
             );
+
+            CREATE TABLE IF NOT EXISTS financials_quarterly (
+                ticker TEXT NOT NULL,
+                period TEXT NOT NULL,
+                revenue DOUBLE PRECISION,
+                operating_income DOUBLE PRECISION,
+                ebitda DOUBLE PRECISION,
+                net_income DOUBLE PRECISION,
+                eps DOUBLE PRECISION,
+                profit_margin DOUBLE PRECISION,
+                PRIMARY KEY (ticker, period)
+            );
+
+            CREATE TABLE IF NOT EXISTS balance_sheet (
+                ticker TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                total_assets DOUBLE PRECISION,
+                total_debt DOUBLE PRECISION,
+                net_debt DOUBLE PRECISION,
+                cash DOUBLE PRECISION,
+                total_equity DOUBLE PRECISION,
+                intangible_assets DOUBLE PRECISION,
+                PRIMARY KEY (ticker, year)
+            );
+
+            CREATE TABLE IF NOT EXISTS cashflow (
+                ticker TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                operating_cf DOUBLE PRECISION,
+                capex DOUBLE PRECISION,
+                free_cf DOUBLE PRECISION,
+                PRIMARY KEY (ticker, year)
+            );
+    """)
+
+    # Add columns to financials_annual if they don't exist (migration-safe)
+    await conn.execute("""
+        DO $$ BEGIN
+            ALTER TABLE financials_annual ADD COLUMN IF NOT EXISTS operating_income DOUBLE PRECISION;
+            ALTER TABLE financials_annual ADD COLUMN IF NOT EXISTS ebitda DOUBLE PRECISION;
+        EXCEPTION WHEN others THEN NULL;
+        END $$;
     """)
 
     # Indexes — CREATE INDEX IF NOT EXISTS must be separate statements in PG
@@ -91,3 +135,6 @@ async def _run_schema(conn: asyncpg.Connection):
     await conn.execute("CREATE INDEX IF NOT EXISTS idx_stocks_country ON stocks(country)")
     await conn.execute("CREATE INDEX IF NOT EXISTS idx_stocks_sector ON stocks(sector)")
     await conn.execute("CREATE INDEX IF NOT EXISTS idx_financials_ticker ON financials_annual(ticker, year DESC)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_quarterly_ticker ON financials_quarterly(ticker, period DESC)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_balance_ticker ON balance_sheet(ticker, year DESC)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_cashflow_ticker ON cashflow(ticker, year DESC)")

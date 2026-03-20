@@ -39,9 +39,38 @@ class PricePoint(BaseModel):
 class AnnualFinancial(BaseModel):
     year: int
     revenue: Optional[float] = None
+    operating_income: Optional[float] = None
+    ebitda: Optional[float] = None
     net_income: Optional[float] = None
     eps: Optional[float] = None
     profit_margin: Optional[float] = None
+
+
+class QuarterlyFinancial(BaseModel):
+    period: str  # e.g. "2024-Q3"
+    revenue: Optional[float] = None
+    operating_income: Optional[float] = None
+    ebitda: Optional[float] = None
+    net_income: Optional[float] = None
+    eps: Optional[float] = None
+    profit_margin: Optional[float] = None
+
+
+class BalanceSheetEntry(BaseModel):
+    year: int
+    total_assets: Optional[float] = None
+    total_debt: Optional[float] = None
+    net_debt: Optional[float] = None
+    cash: Optional[float] = None
+    total_equity: Optional[float] = None
+    intangible_assets: Optional[float] = None
+
+
+class CashflowEntry(BaseModel):
+    year: int
+    operating_cf: Optional[float] = None
+    capex: Optional[float] = None
+    free_cf: Optional[float] = None
 
 
 class CompanyDetail(BaseModel):
@@ -66,3 +95,6 @@ class CompanyDetail(BaseModel):
     revenue: Optional[float] = None
     revenue_growth: Optional[float] = None
     financials: list[AnnualFinancial] = []
+    quarterly_financials: list[QuarterlyFinancial] = []
+    balance_sheet: list[BalanceSheetEntry] = []
+    cashflow: list[CashflowEntry] = []

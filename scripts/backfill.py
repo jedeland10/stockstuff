@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backfill price history and annual financials for all seeded stocks."""
+"""Backfill price history, financials, balance sheet, and cash flow for all seeded stocks."""
 import asyncio
 import sys
 import time
@@ -12,7 +12,7 @@ import asyncpg
 from curl_cffi.requests import Session as CffiSession
 from app.config import DATABASE_URL
 from app.database import init_db
-from app.services.fetcher import _safe_float
+from app.services.fetcher import _safe_float, _get_val
 import yfinance as yf
 import logging
 
@@ -52,7 +52,7 @@ def _fetch_prices_direct(ticker: str, session: CffiSession, period: str = "10y")
         for j, ts in enumerate(timestamps):
             c = closes[j] if j < len(closes) else None
             if c is None:
-                continue  # skip days with no close price
+                continue
             rows.append((
                 ticker,
                 datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d"),
@@ -68,32 +68,73 @@ def _fetch_prices_direct(ticker: str, session: CffiSession, period: str = "10y")
         return []
 
 
-def _fetch_financials(ticker: str, session: CffiSession) -> list[tuple]:
-    """Fetch annual financials via yfinance (lightweight, rarely rate-limited)."""
+def _fetch_all_financials(ticker: str, session: CffiSession):
+    """Fetch all financial data for a ticker in one go (reuses yf.Ticker object)."""
     try:
         t = yf.Ticker(ticker, session=session)
+
+        # Annual income statement
+        annual = []
         inc = t.income_stmt
-        if inc is None or inc.empty:
-            return []
-        rows = []
-        for col in inc.columns:
-            year = col.year
-            revenue = _safe_float(inc.loc["Total Revenue", col]) if "Total Revenue" in inc.index else None
-            net_income = _safe_float(inc.loc["Net Income", col]) if "Net Income" in inc.index else None
-            eps = None
-            for name in ("Basic EPS", "Diluted EPS"):
-                if name in inc.index:
-                    eps = _safe_float(inc.loc[name, col])
-                    if eps is not None:
-                        break
-            margin = None
-            if revenue and net_income and revenue != 0:
-                margin = round(net_income / revenue * 100, 2)
-            rows.append((ticker, year, revenue, net_income, eps, margin))
-        return rows
+        if inc is not None and not inc.empty:
+            for col in inc.columns:
+                revenue = _safe_float(_get_val(inc, col, "Total Revenue"))
+                net_income = _safe_float(_get_val(inc, col, "Net Income"))
+                eps = _safe_float(_get_val(inc, col, "Basic EPS", "Diluted EPS"))
+                operating_income = _safe_float(_get_val(inc, col, "Operating Income"))
+                ebitda = _safe_float(_get_val(inc, col, "EBITDA", "Normalized EBITDA"))
+                margin = None
+                if revenue and net_income and revenue != 0:
+                    margin = round(net_income / revenue * 100, 2)
+                annual.append((ticker, col.year, revenue, operating_income, ebitda, net_income, eps, margin))
+
+        # Quarterly income statement
+        quarterly = []
+        qinc = t.quarterly_income_stmt
+        if qinc is not None and not qinc.empty:
+            for col in qinc.columns:
+                period = f"{col.year}-Q{(col.month - 1) // 3 + 1}"
+                revenue = _safe_float(_get_val(qinc, col, "Total Revenue"))
+                operating_income = _safe_float(_get_val(qinc, col, "Operating Income"))
+                ebitda = _safe_float(_get_val(qinc, col, "EBITDA", "Normalized EBITDA"))
+                net_income = _safe_float(_get_val(qinc, col, "Net Income"))
+                eps = _safe_float(_get_val(qinc, col, "Basic EPS", "Diluted EPS"))
+                margin = None
+                if revenue and net_income and revenue != 0:
+                    margin = round(net_income / revenue * 100, 2)
+                quarterly.append((ticker, period, revenue, operating_income, ebitda, net_income, eps, margin))
+
+        # Balance sheet
+        balance = []
+        bs = t.balance_sheet
+        if bs is not None and not bs.empty:
+            for col in bs.columns:
+                total_assets = _safe_float(_get_val(bs, col, "Total Assets"))
+                total_debt = _safe_float(_get_val(bs, col, "Total Debt"))
+                cash = _safe_float(_get_val(bs, col, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"))
+                net_debt = None
+                if total_debt is not None and cash is not None:
+                    net_debt = total_debt - cash
+                total_equity = _safe_float(_get_val(bs, col, "Stockholders Equity", "Total Equity Gross Minority Interest"))
+                intangible = _safe_float(_get_val(bs, col, "Goodwill And Other Intangible Assets", "Intangible Assets"))
+                balance.append((ticker, col.year, total_assets, total_debt, _safe_float(net_debt), cash, total_equity, intangible))
+
+        # Cash flow
+        cashflows = []
+        cf = t.cashflow
+        if cf is not None and not cf.empty:
+            for col in cf.columns:
+                ocf = _safe_float(_get_val(cf, col, "Operating Cash Flow"))
+                capex = _safe_float(_get_val(cf, col, "Capital Expenditure"))
+                fcf = None
+                if ocf is not None and capex is not None:
+                    fcf = ocf + capex
+                cashflows.append((ticker, col.year, ocf, capex, _safe_float(fcf)))
+
+        return annual, quarterly, balance, cashflows
     except Exception as e:
         logger.warning(f"  Failed financials for {ticker}: {e}")
-        return []
+        return [], [], [], []
 
 
 async def backfill():
@@ -116,10 +157,10 @@ async def backfill():
 
             logger.info(f"[{i}/{total}] Backfilling {ticker}...")
 
+            # Prices
             has_prices = await conn.fetchval(
                 "SELECT 1 FROM prices WHERE ticker = $1 LIMIT 1", ticker
             )
-
             if not has_prices:
                 prices = _fetch_prices_direct(ticker, session)
                 if prices:
@@ -130,18 +171,52 @@ async def backfill():
                     """, prices)
                     logger.info(f"  {len(prices)} price rows")
             else:
-                logger.info(f"  prices already exist, skipping")
+                logger.info(f"  prices exist, skipping")
 
-            fins = _fetch_financials(ticker, session)
-            if fins:
+            # All financials in one yf.Ticker call
+            annual, quarterly, balance, cashflows = _fetch_all_financials(ticker, session)
+
+            if annual:
                 await conn.executemany("""
-                    INSERT INTO financials_annual (ticker, year, revenue, net_income, eps, profit_margin)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                    INSERT INTO financials_annual (ticker, year, revenue, operating_income, ebitda, net_income, eps, profit_margin)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     ON CONFLICT (ticker, year) DO UPDATE SET
-                        revenue=EXCLUDED.revenue, net_income=EXCLUDED.net_income,
+                        revenue=EXCLUDED.revenue, operating_income=EXCLUDED.operating_income,
+                        ebitda=EXCLUDED.ebitda, net_income=EXCLUDED.net_income,
                         eps=EXCLUDED.eps, profit_margin=EXCLUDED.profit_margin
-                """, fins)
-                logger.info(f"  {len(fins)} annual rows")
+                """, annual)
+                logger.info(f"  {len(annual)} annual rows")
+
+            if quarterly:
+                await conn.executemany("""
+                    INSERT INTO financials_quarterly (ticker, period, revenue, operating_income, ebitda, net_income, eps, profit_margin)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ON CONFLICT (ticker, period) DO UPDATE SET
+                        revenue=EXCLUDED.revenue, operating_income=EXCLUDED.operating_income,
+                        ebitda=EXCLUDED.ebitda, net_income=EXCLUDED.net_income,
+                        eps=EXCLUDED.eps, profit_margin=EXCLUDED.profit_margin
+                """, quarterly)
+                logger.info(f"  {len(quarterly)} quarterly rows")
+
+            if balance:
+                await conn.executemany("""
+                    INSERT INTO balance_sheet (ticker, year, total_assets, total_debt, net_debt, cash, total_equity, intangible_assets)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ON CONFLICT (ticker, year) DO UPDATE SET
+                        total_assets=EXCLUDED.total_assets, total_debt=EXCLUDED.total_debt,
+                        net_debt=EXCLUDED.net_debt, cash=EXCLUDED.cash,
+                        total_equity=EXCLUDED.total_equity, intangible_assets=EXCLUDED.intangible_assets
+                """, balance)
+                logger.info(f"  {len(balance)} balance sheet rows")
+
+            if cashflows:
+                await conn.executemany("""
+                    INSERT INTO cashflow (ticker, year, operating_cf, capex, free_cf)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (ticker, year) DO UPDATE SET
+                        operating_cf=EXCLUDED.operating_cf, capex=EXCLUDED.capex, free_cf=EXCLUDED.free_cf
+                """, cashflows)
+                logger.info(f"  {len(cashflows)} cashflow rows")
 
             time.sleep(1)
 

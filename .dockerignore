@@ -7,3 +7,6 @@ __pycache__/
 .git/
 .gitignore
 .dockerignore
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/build/

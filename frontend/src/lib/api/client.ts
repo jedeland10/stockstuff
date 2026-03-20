@@ -1,0 +1,44 @@
+import type { ScreenerResponse, CompanyDetail, PricePoint } from './types';
+
+const BASE = '/api';
+
+export async function getScreener(params: {
+	country?: string | null;
+	sector?: string;
+	search?: string;
+	sort_by?: string;
+	sort_dir?: string;
+	limit?: number;
+	offset?: number;
+}): Promise<ScreenerResponse> {
+	const q = new URLSearchParams();
+	if (params.country) q.set('country', params.country);
+	if (params.sector) q.set('sector', params.sector);
+	if (params.search) q.set('search', params.search);
+	if (params.sort_by) q.set('sort_by', params.sort_by);
+	if (params.sort_dir) q.set('sort_dir', params.sort_dir);
+	q.set('limit', String(params.limit ?? 500));
+	if (params.offset) q.set('offset', String(params.offset));
+	const res = await fetch(`${BASE}/screener?${q}`);
+	return res.json();
+}
+
+export async function getCompany(ticker: string): Promise<CompanyDetail> {
+	const res = await fetch(`${BASE}/company/${encodeURIComponent(ticker)}`);
+	return res.json();
+}
+
+export async function getChart(ticker: string, period = '1y'): Promise<PricePoint[]> {
+	const res = await fetch(`${BASE}/chart/${encodeURIComponent(ticker)}?period=${period}`);
+	return res.json();
+}
+
+export async function getSectors(): Promise<string[]> {
+	const res = await fetch(`${BASE}/meta/sectors`);
+	return res.json();
+}
+
+export async function getCountries(): Promise<string[]> {
+	const res = await fetch(`${BASE}/meta/countries`);
+	return res.json();
+}

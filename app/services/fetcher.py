@@ -65,7 +65,7 @@ def fetch_stock_info(ticker: str) -> Optional[dict]:
             "pb": _safe_float(info.get("priceToBook")),
             "ps": _safe_float(info.get("priceToSalesTrailing12Months")),
             "ev_ebitda": _safe_float(info.get("enterpriseToEbitda")),
-            "div_yield": _pct(info.get("dividendYield")),
+            "div_yield": _safe_float(info.get("dividendYield")),
             "roe": _pct(info.get("returnOnEquity")),
             "margin": _pct(info.get("profitMargins")),
             "eps": _safe_float(info.get("trailingEps")),
@@ -119,10 +119,14 @@ def fetch_annual_financials(ticker: str) -> list[dict]:
             margin = None
             if revenue and net_income and revenue != 0:
                 margin = round(net_income / revenue * 100, 2)
+            operating_income = _get_val(inc, col, "Operating Income")
+            ebitda = _get_val(inc, col, "EBITDA", "Normalized EBITDA")
             rows.append({
                 "ticker": ticker,
                 "year": year,
                 "revenue": revenue,
+                "operating_income": _safe_float(operating_income),
+                "ebitda": _safe_float(ebitda),
                 "net_income": net_income,
                 "eps": eps_val,
                 "profit_margin": margin,
@@ -164,3 +168,102 @@ def _get_val(df, col, *names):
             if v is not None and str(v) != "nan":
                 return float(v)
     return None
+
+
+def fetch_quarterly_financials(ticker: str) -> list[dict]:
+    """Fetch quarterly income statement data."""
+    try:
+        t = yf.Ticker(ticker, session=_get_session())
+        inc = t.quarterly_income_stmt
+        if inc is None or inc.empty:
+            return []
+        rows = []
+        for col in inc.columns:
+            period = f"{col.year}-Q{(col.month - 1) // 3 + 1}"
+            revenue = _get_val(inc, col, "Total Revenue")
+            operating_income = _get_val(inc, col, "Operating Income")
+            ebitda = _get_val(inc, col, "EBITDA", "Normalized EBITDA")
+            net_income = _get_val(inc, col, "Net Income")
+            eps_val = _get_val(inc, col, "Basic EPS", "Diluted EPS")
+            margin = None
+            if revenue and net_income and revenue != 0:
+                margin = round(net_income / revenue * 100, 2)
+            rows.append({
+                "ticker": ticker,
+                "period": period,
+                "revenue": _safe_float(revenue),
+                "operating_income": _safe_float(operating_income),
+                "ebitda": _safe_float(ebitda),
+                "net_income": _safe_float(net_income),
+                "eps": _safe_float(eps_val),
+                "profit_margin": _safe_float(margin),
+            })
+        return rows
+    except Exception as e:
+        logger.warning(f"Failed to fetch quarterly financials for {ticker}: {e}")
+        return []
+
+
+def fetch_balance_sheet(ticker: str) -> list[dict]:
+    """Fetch annual balance sheet data."""
+    try:
+        t = yf.Ticker(ticker, session=_get_session())
+        bs = t.balance_sheet
+        if bs is None or bs.empty:
+            return []
+        rows = []
+        for col in bs.columns:
+            year = col.year
+            total_assets = _get_val(bs, col, "Total Assets")
+            total_debt = _get_val(bs, col, "Total Debt")
+            cash = _get_val(bs, col, "Cash And Cash Equivalents",
+                            "Cash Cash Equivalents And Short Term Investments")
+            net_debt = None
+            if total_debt is not None and cash is not None:
+                net_debt = total_debt - cash
+            total_equity = _get_val(bs, col, "Stockholders Equity",
+                                    "Total Equity Gross Minority Interest")
+            intangible_assets = _get_val(bs, col, "Goodwill And Other Intangible Assets",
+                                         "Intangible Assets")
+            rows.append({
+                "ticker": ticker,
+                "year": year,
+                "total_assets": _safe_float(total_assets),
+                "total_debt": _safe_float(total_debt),
+                "net_debt": _safe_float(net_debt),
+                "cash": _safe_float(cash),
+                "total_equity": _safe_float(total_equity),
+                "intangible_assets": _safe_float(intangible_assets),
+            })
+        return rows
+    except Exception as e:
+        logger.warning(f"Failed to fetch balance sheet for {ticker}: {e}")
+        return []
+
+
+def fetch_cashflow(ticker: str) -> list[dict]:
+    """Fetch annual cash flow data."""
+    try:
+        t = yf.Ticker(ticker, session=_get_session())
+        cf = t.cashflow
+        if cf is None or cf.empty:
+            return []
+        rows = []
+        for col in cf.columns:
+            year = col.year
+            operating_cf = _get_val(cf, col, "Operating Cash Flow")
+            capex = _get_val(cf, col, "Capital Expenditure")
+            free_cf = None
+            if operating_cf is not None and capex is not None:
+                free_cf = operating_cf + capex  # capex is negative in yfinance
+            rows.append({
+                "ticker": ticker,
+                "year": year,
+                "operating_cf": _safe_float(operating_cf),
+                "capex": _safe_float(capex),
+                "free_cf": _safe_float(free_cf),
+            })
+        return rows
+    except Exception as e:
+        logger.warning(f"Failed to fetch cashflow for {ticker}: {e}")
+        return []

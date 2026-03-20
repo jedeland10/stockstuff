@@ -1,4 +1,4 @@
-/* ── Chart.js bar charts for financials + ratio mini-charts ── */
+/* ── Chart.js bar charts for all financial views ── */
 
 let charts = {};
 
@@ -85,38 +85,42 @@ function signColor(v) {
   return v >= 0 ? CHART_COLORS.positive + '88' : CHART_COLORS.negative + '88';
 }
 
+function computeGrowth(data, field) {
+  return data.map((item, i) => {
+    if (i === 0) return null;
+    const prev = data[i - 1][field];
+    const curr = item[field];
+    if (!prev || !curr || prev === 0) return null;
+    return ((curr - prev) / Math.abs(prev)) * 100;
+  });
+}
+
+/* ── Overview Tab financials (existing) ── */
 function renderFinancials(financials, companyData) {
   if (!financials || !financials.length) return;
 
   const sorted = [...financials].sort((a, b) => a.year - b.year);
   const labels = sorted.map(f => String(f.year));
 
-  // 1) Net Sales (revenue)
   makeBarChart('revenue-chart', labels,
     sorted.map(f => f.revenue),
     () => CHART_COLORS.bar + '88',
     fmtLargeNum
   );
 
-  // 2) Revenue Growth (year-over-year %)
-  const growthData = sorted.map((f, i) => {
-    if (i === 0 || !sorted[i - 1].revenue || !f.revenue) return null;
-    return ((f.revenue - sorted[i - 1].revenue) / Math.abs(sorted[i - 1].revenue)) * 100;
-  });
+  const growthData = computeGrowth(sorted, 'revenue');
   makeBarChart('growth-chart', labels,
     growthData,
     (v) => v != null ? signColor(v) : '#30363d88',
     fmtPct
   );
 
-  // 3) Earnings per Share
   makeBarChart('eps-chart', labels,
     sorted.map(f => f.eps),
     (v) => v != null ? signColor(v) : '#30363d88',
     fmtNum
   );
 
-  // 4) Profit Margin (%)
   makeBarChart('margin-chart', labels,
     sorted.map(f => f.profit_margin),
     (v) => v != null ? signColor(v) : '#30363d88',
@@ -124,47 +128,9 @@ function renderFinancials(financials, companyData) {
   );
 }
 
-/* ── Ratio mini-charts (P/E, P/S from annual data) ── */
+/* ── Ratio mini-charts ── */
 function renderRatioCharts(financials, companyData) {
   if (!financials || !financials.length) return;
-
-  const sorted = [...financials].sort((a, b) => a.year - b.year);
-  const labels = sorted.map(f => String(f.year));
-
-  // Add current value as latest bar if we have companyData
-  const peData = sorted.map(f => {
-    if (f.eps && f.eps !== 0 && f.revenue) {
-      // We don't have historical PE directly, skip
-      return null;
-    }
-    return null;
-  });
-
-  // For P/E mini-chart: use current PE as single value + label, or build from annual EPS+price
-  // Since we only have current ratios, show them as a simple bar with the current value
-  // alongside year-labels from financials
-  const peLabels = [...labels];
-  const peValues = sorted.map(() => null);
-
-  // Add current as the latest
-  if (companyData && companyData.pe != null) {
-    peLabels.push('Now');
-    peValues.push(companyData.pe);
-  }
-
-  // For annual approximation, compute P/E from EPS if we have price at year-end (we don't really)
-  // Instead show the current pe as context on the mini chart, with financials years showing EPS-derived PE
-  // Best effort: if we have eps, use current price / eps_that_year as rough historical PE
-  if (companyData && companyData.price) {
-    sorted.forEach((f, i) => {
-      if (f.eps && f.eps > 0) {
-        // This is a rough proxy—not historically accurate but directionally useful
-        peValues[i] = null; // We'd need historical prices, skip for now
-      }
-    });
-  }
-
-  // Just show current P/E and P/S as single-value mini charts
   renderSingleRatio('ratio-pe-chart', 'P/E', companyData?.pe, financials, 'pe');
   renderSingleRatio('ratio-ps-chart', 'P/S', companyData?.ps, financials, 'ps');
 }
@@ -174,34 +140,10 @@ function renderSingleRatio(canvasId, label, currentVal, financials, type) {
   if (!el) return;
   if (charts[canvasId]) charts[canvasId].destroy();
 
-  // Build labels from financials years + "Current"
-  const sorted = [...financials].sort((a, b) => a.year - b.year);
-  const labels = sorted.map(f => String(f.year));
-  const values = sorted.map(f => {
-    // Approximate: for P/S = revenue per share doesn't exist, so just show placeholders
-    // We'll compute from annual data if possible
-    if (type === 'pe' && f.eps && f.eps > 0 && f.revenue) {
-      // Very rough: use net_income margin pattern—but we don't have historical prices
-      return null;
-    }
-    return null;
-  });
+  const displayLabels = ['Curr'];
+  const displayValues = [currentVal];
 
-  // Add current
-  labels.push('Curr');
-  values.push(currentVal);
-
-  // Filter out nulls for display, keep the ones we have
-  const displayLabels = [];
-  const displayValues = [];
-  labels.forEach((l, i) => {
-    if (values[i] != null) {
-      displayLabels.push(l);
-      displayValues.push(values[i]);
-    }
-  });
-
-  if (!displayValues.length) return;
+  if (!displayValues.filter(v => v != null).length) return;
 
   charts[canvasId] = new Chart(el, {
     type: 'bar',
@@ -242,4 +184,84 @@ function renderSingleRatio(canvasId, label, currentVal, financials, type) {
       },
     },
   });
+}
+
+/* ── Report Tab ── */
+function renderReportTab(cd) {
+  if (!cd) return;
+
+  // Annual financials
+  const fin = cd.financials ? [...cd.financials].sort((a, b) => a.year - b.year) : [];
+  const labels = fin.map(f => String(f.year));
+
+  if (fin.length) {
+    makeBarChart('rpt-revenue', labels, fin.map(f => f.revenue), () => CHART_COLORS.bar + '88', fmtLargeNum);
+    makeBarChart('rpt-opinc', labels, fin.map(f => f.operating_income), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('rpt-ebitda', labels, fin.map(f => f.ebitda), () => CHART_COLORS.bar + '88', fmtLargeNum);
+    makeBarChart('rpt-netinc', labels, fin.map(f => f.net_income), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('rpt-eps', labels, fin.map(f => f.eps), v => v != null ? signColor(v) : '#30363d88', fmtNum);
+    makeBarChart('rpt-margin', labels, fin.map(f => f.profit_margin), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+
+    // Growth rates
+    makeBarChart('rpt-revgrowth', labels, computeGrowth(fin, 'revenue'), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+    makeBarChart('rpt-opincgrowth', labels, computeGrowth(fin, 'operating_income'), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+    makeBarChart('rpt-earngrowth', labels, computeGrowth(fin, 'net_income'), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+    makeBarChart('rpt-margtrend', labels, fin.map(f => f.profit_margin), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+  }
+
+  // Quarterly
+  const qfin = cd.quarterly_financials ? [...cd.quarterly_financials].sort((a, b) => a.period.localeCompare(b.period)) : [];
+  if (qfin.length) {
+    const qlabels = qfin.map(q => q.period);
+    makeBarChart('rpt-qrev', qlabels, qfin.map(q => q.revenue), () => CHART_COLORS.bar + '88', fmtLargeNum);
+    makeBarChart('rpt-qopinc', qlabels, qfin.map(q => q.operating_income), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('rpt-qnetinc', qlabels, qfin.map(q => q.net_income), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('rpt-qmargin', qlabels, qfin.map(q => q.profit_margin), v => v != null ? signColor(v) : '#30363d88', fmtPct);
+  }
+}
+
+/* ── Key Numbers Tab ── */
+function renderKeyNumbersTab(cd) {
+  if (!cd) return;
+
+  // Balance sheet
+  const bs = cd.balance_sheet ? [...cd.balance_sheet].sort((a, b) => a.year - b.year) : [];
+  if (bs.length) {
+    const bsLabels = bs.map(b => String(b.year));
+    makeBarChart('kn-assets', bsLabels, bs.map(b => b.total_assets), () => CHART_COLORS.bar + '88', fmtLargeNum);
+    makeBarChart('kn-equity', bsLabels, bs.map(b => b.total_equity), () => CHART_COLORS.bar + '88', fmtLargeNum);
+
+    // Equity ratio = equity / total_assets * 100
+    const eqRatio = bs.map(b => {
+      if (b.total_equity && b.total_assets && b.total_assets !== 0) {
+        return (b.total_equity / b.total_assets) * 100;
+      }
+      return null;
+    });
+    makeBarChart('kn-eqratio', bsLabels, eqRatio, v => v != null ? signColor(v) : '#30363d88', fmtPct);
+
+    makeBarChart('kn-netdebt', bsLabels, bs.map(b => b.net_debt), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('kn-cash', bsLabels, bs.map(b => b.cash), () => CHART_COLORS.positive + '88', fmtLargeNum);
+    makeBarChart('kn-intangible', bsLabels, bs.map(b => b.intangible_assets), () => '#d4a01788', fmtLargeNum);
+  }
+
+  // Cash flow
+  const cf = cd.cashflow ? [...cd.cashflow].sort((a, b) => a.year - b.year) : [];
+  if (cf.length) {
+    const cfLabels = cf.map(c => String(c.year));
+    makeBarChart('kn-ocf', cfLabels, cf.map(c => c.operating_cf), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+    makeBarChart('kn-capex', cfLabels, cf.map(c => c.capex), () => CHART_COLORS.negative + '88', fmtLargeNum);
+    makeBarChart('kn-fcf', cfLabels, cf.map(c => c.free_cf), v => v != null ? signColor(v) : '#30363d88', fmtLargeNum);
+
+    // Earnings/FCF ratio
+    const fin = cd.financials ? [...cd.financials].sort((a, b) => a.year - b.year) : [];
+    const earnFcf = cf.map((c, i) => {
+      const matchFin = fin.find(f => f.year === c.year);
+      if (matchFin && matchFin.net_income && c.free_cf && c.free_cf !== 0) {
+        return (matchFin.net_income / c.free_cf) * 100;
+      }
+      return null;
+    });
+    makeBarChart('kn-earnfcf', cfLabels, earnFcf, v => v != null ? signColor(v) : '#30363d88', fmtPct);
+  }
 }
