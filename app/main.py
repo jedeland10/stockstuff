@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from app.database import init_db
+from app.database import create_pool, close_pool
 from app.services.updater import start_scheduler
 from app.routers import screener, company, chart
 
@@ -16,9 +16,10 @@ STATIC_DIR = Path(__file__).parent / "static"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    await create_pool()
     start_scheduler()
     yield
+    await close_pool()
 
 
 app = FastAPI(title="Nordic Stock Screener", lifespan=lifespan)

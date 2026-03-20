@@ -1,8 +1,4 @@
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
-DB_PATH = DATA_DIR / "stocks.db"
+import os
 
 # Nordic exchanges
 EXCHANGES = {
@@ -12,4 +8,9 @@ EXCHANGES = {
     "NO": ".OL",    # Oslo
 }
 
-UPDATE_INTERVAL_HOURS = 6
+UPDATE_INTERVAL_HOURS = int(os.getenv("UPDATE_INTERVAL_HOURS", "6"))
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://stockdata:stockdata@localhost:5432/stockdata",
+)

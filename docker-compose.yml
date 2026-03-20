@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stockdata}
+      POSTGRES_USER: ${POSTGRES_USER:-stockdata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stockdata}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stockdata}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stockdata}:${POSTGRES_PASSWORD:-stockdata}@db:5432/${POSTGRES_DB:-stockdata}
+
+volumes:
+  pgdata:

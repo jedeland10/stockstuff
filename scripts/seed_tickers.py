@@ -6,9 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.database import init_db, DB_PATH, DATA_DIR
+import asyncpg
+from app.config import DATABASE_URL
+from app.database import init_db
 from app.services.fetcher import fetch_stock_info
-import aiosqlite
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
@@ -94,11 +95,19 @@ COUNTRY_MAP = {
 
 
 async def seed():
-    await init_db()
-    async with aiosqlite.connect(str(DB_PATH)) as db:
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        await init_db(conn)
         total = len(TICKERS)
         success = 0
         for i, ticker in enumerate(TICKERS, 1):
+            # Skip if already exists
+            exists = await conn.fetchval("SELECT 1 FROM stocks WHERE ticker = $1", ticker)
+            if exists:
+                logger.info(f"[{i}/{total}] {ticker} already exists, skipping")
+                success += 1
+                continue
+
             logger.info(f"[{i}/{total}] Fetching {ticker}...")
             info = fetch_stock_info(ticker)
             if info is None:
@@ -112,33 +121,44 @@ async def seed():
                     country = code
                     break
 
-            await db.execute("""
-                INSERT OR REPLACE INTO stocks
-                (ticker, name, exchange, country, sector, industry, market_cap, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
+            await conn.execute("""
+                INSERT INTO stocks (ticker, name, exchange, country, sector, industry, market_cap, description)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ON CONFLICT (ticker) DO UPDATE SET
+                    name=EXCLUDED.name, exchange=EXCLUDED.exchange, country=EXCLUDED.country,
+                    sector=EXCLUDED.sector, industry=EXCLUDED.industry,
+                    market_cap=EXCLUDED.market_cap, description=EXCLUDED.description
+            """,
                 ticker, info["name"], info["exchange"], country,
                 info["sector"], info["industry"], info["market_cap"],
                 info["description"],
-            ))
+            )
 
-            await db.execute("""
-                INSERT OR REPLACE INTO fundamentals
+            await conn.execute("""
+                INSERT INTO fundamentals
                 (ticker, price, change_pct, pe, pb, ps, ev_ebitda,
                  div_yield, roe, margin, eps, revenue, revenue_growth,
                  perf_1y, report_quarter, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-            """, (
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW()::text)
+                ON CONFLICT (ticker) DO UPDATE SET
+                    price=EXCLUDED.price, change_pct=EXCLUDED.change_pct,
+                    pe=EXCLUDED.pe, pb=EXCLUDED.pb, ps=EXCLUDED.ps, ev_ebitda=EXCLUDED.ev_ebitda,
+                    div_yield=EXCLUDED.div_yield, roe=EXCLUDED.roe, margin=EXCLUDED.margin,
+                    eps=EXCLUDED.eps, revenue=EXCLUDED.revenue, revenue_growth=EXCLUDED.revenue_growth,
+                    perf_1y=EXCLUDED.perf_1y, report_quarter=EXCLUDED.report_quarter,
+                    updated_at=EXCLUDED.updated_at
+            """,
                 ticker, info["price"], info["change_pct"],
                 info["pe"], info["pb"], info["ps"], info["ev_ebitda"],
                 info["div_yield"], info["roe"], info["margin"],
                 info["eps"], info["revenue"], info["revenue_growth"],
                 info["perf_1y"], info["report_quarter"],
-            ))
+            )
             success += 1
 
-        await db.commit()
         logger.info(f"Seeded {success}/{total} stocks.")
+    finally:
+        await conn.close()
 
 
 if __name__ == "__main__":

@@ -1,10 +1,11 @@
 """Scheduled data refresh using APScheduler."""
 import asyncio
 import logging
+from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.config import UPDATE_INTERVAL_HOURS, DB_PATH
-from app.services.fetcher import fetch_stock_info
-import aiosqlite
+from app.config import UPDATE_INTERVAL_HOURS
+from app.services.fetcher import fetch_stock_info, fetch_price_history
+from app.database import get_pool
 
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
@@ -13,32 +14,87 @@ scheduler = AsyncIOScheduler()
 async def refresh_fundamentals():
     """Update fundamentals for all stocks."""
     logger.info("Starting scheduled fundamentals refresh...")
-    async with aiosqlite.connect(str(DB_PATH)) as db:
-        db.row_factory = aiosqlite.Row
-        cursor = await db.execute("SELECT ticker FROM stocks")
-        tickers = [row["ticker"] async for row in cursor]
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        tickers = [r["ticker"] for r in await conn.fetch("SELECT ticker FROM stocks")]
 
         updated = 0
         for ticker in tickers:
             info = fetch_stock_info(ticker)
             if info is None:
                 continue
-            await db.execute("""
+            await conn.execute("""
                 UPDATE fundamentals SET
-                    price=?, change_pct=?, pe=?, pb=?, ps=?, ev_ebitda=?,
-                    div_yield=?, roe=?, margin=?, eps=?, revenue=?,
-                    revenue_growth=?, updated_at=datetime('now')
-                WHERE ticker=?
-            """, (
+                    price=$1, change_pct=$2, pe=$3, pb=$4, ps=$5, ev_ebitda=$6,
+                    div_yield=$7, roe=$8, margin=$9, eps=$10, revenue=$11,
+                    revenue_growth=$12, updated_at=NOW()::text
+                WHERE ticker=$13
+            """,
                 info["price"], info["change_pct"], info["pe"], info["pb"],
                 info["ps"], info["ev_ebitda"], info["div_yield"], info["roe"],
                 info["margin"], info["eps"], info["revenue"],
                 info["revenue_growth"], ticker,
-            ))
+            )
             updated += 1
 
-        await db.commit()
         logger.info(f"Refreshed {updated}/{len(tickers)} stocks.")
+
+
+async def refresh_prices():
+    """Incremental price catch-up — fetch only missing dates for each ticker."""
+    logger.info("Starting scheduled price catch-up...")
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        tickers = [r["ticker"] for r in await conn.fetch("SELECT ticker FROM stocks")]
+
+        updated = 0
+        for ticker in tickers:
+            last_date = await conn.fetchval(
+                "SELECT MAX(date) FROM prices WHERE ticker = $1", ticker
+            )
+            if last_date is None:
+                # No price data at all — fetch 2 years
+                period = "2y"
+            else:
+                # Calculate days since last date
+                last_dt = datetime.strptime(last_date, "%Y-%m-%d")
+                gap = (datetime.now() - last_dt).days
+                if gap <= 1:
+                    continue  # Already up to date
+                elif gap <= 7:
+                    period = "5d"
+                elif gap <= 35:
+                    period = "1mo"
+                elif gap <= 100:
+                    period = "3mo"
+                elif gap <= 370:
+                    period = "1y"
+                else:
+                    period = "2y"
+
+            prices = fetch_price_history(ticker, period=period)
+            if not prices:
+                continue
+
+            # Filter to only new dates
+            if last_date:
+                prices = [p for p in prices if p["date"] > last_date]
+
+            if not prices:
+                continue
+
+            # Bulk upsert
+            await conn.executemany("""
+                INSERT INTO prices (ticker, date, open, high, low, close, volume)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (ticker, date) DO NOTHING
+            """, [
+                (p["ticker"], p["date"], p["open"], p["high"], p["low"], p["close"], p["volume"])
+                for p in prices
+            ])
+            updated += 1
+
+        logger.info(f"Price catch-up done — updated {updated}/{len(tickers)} tickers.")
 
 
 def start_scheduler():
@@ -49,5 +105,12 @@ def start_scheduler():
         id="refresh_fundamentals",
         replace_existing=True,
     )
+    scheduler.add_job(
+        lambda: asyncio.create_task(refresh_prices()),
+        "cron",
+        hour=18, minute=0,
+        id="refresh_prices",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info(f"Scheduler started — refresh every {UPDATE_INTERVAL_HOURS}h")
+    logger.info(f"Scheduler started — fundamentals every {UPDATE_INTERVAL_HOURS}h, prices daily at 18:00")

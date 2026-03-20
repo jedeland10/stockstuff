@@ -1,25 +1,39 @@
-import aiosqlite
-from app.config import DB_PATH, DATA_DIR
+import asyncpg
+from app.config import DATABASE_URL
+
+pool: asyncpg.Pool | None = None
 
 
-async def get_db():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    db = await aiosqlite.connect(str(DB_PATH))
-    await db.execute("PRAGMA journal_mode=WAL")
-    db.row_factory = aiosqlite.Row
-    try:
-        yield db
-    finally:
-        await db.close()
+async def create_pool():
+    global pool
+    pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
+    await init_db()
 
 
-async def init_db():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    async with aiosqlite.connect(str(DB_PATH)) as db:
-        # WAL mode for better concurrent read/write
-        await db.execute("PRAGMA journal_mode=WAL")
+async def close_pool():
+    global pool
+    if pool:
+        await pool.close()
+        pool = None
 
-        await db.executescript("""
+
+def get_pool() -> asyncpg.Pool:
+    assert pool is not None, "Database pool not initialized"
+    return pool
+
+
+async def init_db(conn: asyncpg.Connection | None = None):
+    """Create tables/indexes. Pass a connection directly, or uses the pool."""
+    if conn is not None:
+        await _run_schema(conn)
+        return
+    assert pool is not None
+    async with pool.acquire() as c:
+        await _run_schema(c)
+
+
+async def _run_schema(conn: asyncpg.Connection):
+    await conn.execute("""
             CREATE TABLE IF NOT EXISTS stocks (
                 ticker TEXT PRIMARY KEY,
                 name TEXT,
@@ -27,36 +41,36 @@ async def init_db():
                 country TEXT,
                 sector TEXT,
                 industry TEXT,
-                market_cap REAL,
+                market_cap DOUBLE PRECISION,
                 description TEXT
             );
 
             CREATE TABLE IF NOT EXISTS prices (
                 ticker TEXT NOT NULL,
                 date TEXT NOT NULL,
-                open REAL,
-                high REAL,
-                low REAL,
-                close REAL,
-                volume INTEGER,
+                open DOUBLE PRECISION,
+                high DOUBLE PRECISION,
+                low DOUBLE PRECISION,
+                close DOUBLE PRECISION,
+                volume BIGINT,
                 PRIMARY KEY (ticker, date)
             );
 
             CREATE TABLE IF NOT EXISTS fundamentals (
                 ticker TEXT PRIMARY KEY,
-                price REAL,
-                change_pct REAL,
-                pe REAL,
-                pb REAL,
-                ps REAL,
-                ev_ebitda REAL,
-                div_yield REAL,
-                roe REAL,
-                margin REAL,
-                eps REAL,
-                revenue REAL,
-                revenue_growth REAL,
-                perf_1y REAL,
+                price DOUBLE PRECISION,
+                change_pct DOUBLE PRECISION,
+                pe DOUBLE PRECISION,
+                pb DOUBLE PRECISION,
+                ps DOUBLE PRECISION,
+                ev_ebitda DOUBLE PRECISION,
+                div_yield DOUBLE PRECISION,
+                roe DOUBLE PRECISION,
+                margin DOUBLE PRECISION,
+                eps DOUBLE PRECISION,
+                revenue DOUBLE PRECISION,
+                revenue_growth DOUBLE PRECISION,
+                perf_1y DOUBLE PRECISION,
                 report_quarter TEXT,
                 updated_at TEXT
             );
@@ -64,17 +78,16 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS financials_annual (
                 ticker TEXT NOT NULL,
                 year INTEGER NOT NULL,
-                revenue REAL,
-                net_income REAL,
-                eps REAL,
-                profit_margin REAL,
+                revenue DOUBLE PRECISION,
+                net_income DOUBLE PRECISION,
+                eps DOUBLE PRECISION,
+                profit_margin DOUBLE PRECISION,
                 PRIMARY KEY (ticker, year)
             );
+    """)
 
-            -- Indexes for chart/screener queries
-            CREATE INDEX IF NOT EXISTS idx_prices_ticker_date ON prices(ticker, date DESC);
-            CREATE INDEX IF NOT EXISTS idx_stocks_country ON stocks(country);
-            CREATE INDEX IF NOT EXISTS idx_stocks_sector ON stocks(sector);
-            CREATE INDEX IF NOT EXISTS idx_financials_ticker ON financials_annual(ticker, year DESC);
-        """)
-        await db.commit()
+    # Indexes — CREATE INDEX IF NOT EXISTS must be separate statements in PG
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_prices_ticker_date ON prices(ticker, date DESC)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_stocks_country ON stocks(country)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_stocks_sector ON stocks(sector)")
+    await conn.execute("CREATE INDEX IF NOT EXISTS idx_financials_ticker ON financials_annual(ticker, year DESC)")

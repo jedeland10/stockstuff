@@ -1,0 +1,9 @@
+data/
+__pycache__/
+*.pyc
+.env
+*.db
+.venv/
+.git/
+.gitignore
+.dockerignore

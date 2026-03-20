@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends, Query
-import aiosqlite
-from app.database import get_db
+from fastapi import APIRouter, Query
+from app.database import get_pool
 from app.models import PricePoint
 
 router = APIRouter(prefix="/api")
@@ -21,17 +20,17 @@ PERIOD_DAYS = {
 async def get_chart(
     ticker: str,
     period: str = Query("1y"),
-    db: aiosqlite.Connection = Depends(get_db),
 ):
     days = PERIOD_DAYS.get(period, 365)
-    cursor = await db.execute("""
-        SELECT date, open, high, low, close, volume
-        FROM prices
-        WHERE ticker = ? AND date >= date('now', ?)
-        ORDER BY date ASC
-    """, (ticker, f"-{days} days"))
-    rows = await cursor.fetchall()
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT date, open, high, low, close, volume
+            FROM prices
+            WHERE ticker = $1 AND date >= (CURRENT_DATE - $2 * INTERVAL '1 day')::date::text
+            ORDER BY date ASC
+        """, ticker, days)
     return [
-        PricePoint(date=r[0], open=r[1], high=r[2], low=r[3], close=r[4], volume=r[5])
+        PricePoint(date=r["date"], open=r["open"], high=r["high"], low=r["low"], close=r["close"], volume=r["volume"])
         for r in rows
     ]
