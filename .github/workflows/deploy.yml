@@ -27,4 +27,5 @@ jobs:
 
             # Rebuild and restart (pgdata volume persists)
             docker compose down
-            docker compose up -d --build
+            docker compose build --no-cache app
+            docker compose up -d
