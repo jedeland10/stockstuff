@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Import discovered tickers into the database (seed + initial fundamentals)."""
 import asyncio
-import json
 import sys
 import time
 from pathlib import Path
@@ -17,8 +16,6 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 logger = logging.getLogger(__name__)
 
-DISCOVERED = Path(__file__).resolve().parent.parent / "data" / "discovered_tickers.json"
-
 COUNTRY_MAP = {
     ".ST": "SE",
     ".HE": "FI",
@@ -28,27 +25,21 @@ COUNTRY_MAP = {
 
 
 async def import_tickers():
-    if not DISCOVERED.exists():
-        logger.error(f"No discovered tickers file at {DISCOVERED}. Run discover_tickers.py first.")
-        return
-
-    with open(DISCOVERED) as f:
-        data = json.load(f)
-
-    tickers = list(data.get("tickers", {}).keys())
-    logger.info(f"Found {len(tickers)} discovered tickers")
-
     conn = await asyncpg.connect(DATABASE_URL)
     try:
         await init_db(conn)
 
-        # Check which ones are already in the database
-        existing = set(
+        # Get discovered tickers not yet in stocks table
+        new_tickers = [
             r["ticker"]
-            for r in await conn.fetch("SELECT ticker FROM stocks")
-        )
-        new_tickers = [t for t in tickers if t not in existing]
-        logger.info(f"{len(new_tickers)} new tickers to import ({len(existing)} already exist)")
+            for r in await conn.fetch("""
+                SELECT f.ticker FROM _discovery_found f
+                LEFT JOIN stocks s ON f.ticker = s.ticker
+                WHERE s.ticker IS NULL
+            """)
+        ]
+        existing = await conn.fetchval("SELECT COUNT(*) FROM stocks")
+        logger.info(f"{len(new_tickers)} new tickers to import ({existing} already exist)")
 
         success = 0
         for i, ticker in enumerate(new_tickers, 1):
