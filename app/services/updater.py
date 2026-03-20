@@ -100,8 +100,8 @@ async def refresh_prices():
 def start_scheduler():
     scheduler.add_job(
         lambda: asyncio.create_task(refresh_fundamentals()),
-        "interval",
-        hours=UPDATE_INTERVAL_HOURS,
+        "cron",
+        hour=20, minute=0,
         id="refresh_fundamentals",
         replace_existing=True,
     )
@@ -113,4 +113,4 @@ def start_scheduler():
         replace_existing=True,
     )
     scheduler.start()
-    logger.info(f"Scheduler started — fundamentals every {UPDATE_INTERVAL_HOURS}h, prices daily at 18:00")
+    logger.info("Scheduler started — fundamentals daily at 20:00, prices daily at 18:00")
