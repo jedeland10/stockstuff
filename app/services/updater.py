@@ -104,7 +104,7 @@ def start_scheduler():
     scheduler.add_job(
         refresh_fundamentals,
         "cron",
-        hour=12, minute=15,
+        hour=18, minute=0,
         timezone=tz,
         id="refresh_fundamentals",
         replace_existing=True,
@@ -112,10 +112,10 @@ def start_scheduler():
     scheduler.add_job(
         refresh_prices,
         "cron",
-        hour=12, minute=15,
+        hour=18, minute=0,
         timezone=tz,
         id="refresh_prices",
         replace_existing=True,
     )
     scheduler.start()
-    logger.info("Scheduler started — fundamentals + prices daily at 12:00 (Europe/Stockholm)")
+    logger.info("Scheduler started — fundamentals + prices daily at 18:00 (Europe/Stockholm)")
