@@ -2,31 +2,37 @@
   import type { StockRow } from '$lib/api/types';
   import { fmtLarge } from '$lib/utils/format';
 
-  let { stocks, onSelect, selectedTicker }: {
+  let { stocks, onSelect, selectedTicker, onLoadMore, onSort, loading, hasMore }: {
     stocks: StockRow[];
     onSelect: (ticker: string) => void;
     selectedTicker: string | null;
+    onLoadMore: () => void;
+    onSort: (col: string, dir: 'asc' | 'desc') => void;
+    loading: boolean;
+    hasMore: boolean;
   } = $props();
 
   let sortBy = $state('market_cap');
   let sortDir = $state<'asc' | 'desc'>('desc');
+  let tableEl: HTMLDivElement;
 
   function toggleSort(col: string) {
-    if (sortBy === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    else { sortBy = col; sortDir = 'desc'; }
+    if (sortBy === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortBy = col;
+      sortDir = 'desc';
+    }
+    onSort(sortBy, sortDir);
   }
 
-  let sorted = $derived.by(() => {
-    return [...stocks].sort((a, b) => {
-      const av = a[sortBy as keyof StockRow];
-      const bv = b[sortBy as keyof StockRow];
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-  });
+  function handleScroll() {
+    if (!tableEl || loading || !hasMore) return;
+    const { scrollTop, scrollHeight, clientHeight } = tableEl;
+    if (scrollHeight - scrollTop - clientHeight < 200) {
+      onLoadMore();
+    }
+  }
 
   const FLAG: Record<string, string> = { SE: '\u{1F1F8}\u{1F1EA}', DK: '\u{1F1E9}\u{1F1F0}', FI: '\u{1F1EB}\u{1F1EE}', NO: '\u{1F1F3}\u{1F1F4}' };
 
@@ -49,7 +55,8 @@
   ];
 </script>
 
-<div class="table-container">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="table-container" bind:this={tableEl} onscroll={handleScroll}>
   <table>
     <thead>
       <tr>
@@ -63,7 +70,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each sorted as stock (stock.ticker)}
+      {#each stocks as stock (stock.ticker)}
         <tr class:selected={selectedTicker === stock.ticker} onclick={() => onSelect(stock.ticker)}>
           <td class="name-cell">
             <span class="flag">{FLAG[stock.country ?? ''] ?? ''}</span>
@@ -91,6 +98,9 @@
       {/each}
     </tbody>
   </table>
+  {#if loading}
+    <div class="load-more">Loading...</div>
+  {/if}
 </div>
 
 <style>
@@ -118,4 +128,9 @@
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .dim { color: var(--text-dim); }
   .truncate { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+
+  .load-more {
+    text-align: center; padding: 12px; color: var(--text-dim);
+    font-family: var(--font-mono); font-size: 11px;
+  }
 </style>

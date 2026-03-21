@@ -9,12 +9,48 @@
 
   let stocks = $state<StockRow[]>([]);
   let total = $state(0);
+  let loading = $state(false);
+  let hasMore = $state(true);
   let panelWidth = $state(Math.round(window.innerWidth * 2 / 5));
 
-  async function loadScreener(filters: { country: string|null; sector: string; search: string } = { country: null, sector: '', search: '' }) {
-    const data = await getScreener({ ...filters, limit: 500 });
-    stocks = data.stocks;
+  const PAGE_SIZE = 100;
+  let currentFilters = $state<{ country: string|null; sector: string; search: string }>({ country: null, sector: '', search: '' });
+  let sortBy = $state('market_cap');
+  let sortDir = $state<'asc' | 'desc'>('desc');
+
+  async function loadScreener(filters?: { country: string|null; sector: string; search: string }) {
+    if (filters) {
+      currentFilters = filters;
+      stocks = [];
+    }
+    loading = true;
+    const data = await getScreener({
+      ...currentFilters,
+      sort_by: sortBy,
+      sort_dir: sortDir,
+      limit: PAGE_SIZE,
+      offset: filters ? 0 : stocks.length,
+    });
+    if (filters) {
+      stocks = data.stocks;
+    } else {
+      stocks = [...stocks, ...data.stocks];
+    }
     total = data.total;
+    hasMore = stocks.length < total;
+    loading = false;
+  }
+
+  async function loadMore() {
+    if (loading || !hasMore) return;
+    await loadScreener();
+  }
+
+  async function onSort(col: string, dir: 'asc' | 'desc') {
+    sortBy = col;
+    sortDir = dir;
+    stocks = [];
+    await loadScreener(currentFilters);
   }
 
   async function selectStock(ticker: string) {
@@ -48,19 +84,17 @@
     document.addEventListener('mouseup', onUp);
   }
 
-  onMount(() => { loadScreener(); });
+  onMount(() => { loadScreener(currentFilters); });
 </script>
 
 <div class="app">
   <ScreenerFilters {total} onFilter={loadScreener} />
 
   <div class="main">
-    <!-- Table always takes full width -->
     <div class="table-panel">
-      <ScreenerTable {stocks} onSelect={selectStock} selectedTicker={$selectedTicker} />
+      <ScreenerTable {stocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
     </div>
 
-    <!-- Detail panel floats on top, anchored to right -->
     {#if $selectedTicker}
       <div class="detail-overlay" style="width:{panelWidth}px">
         <!-- svelte-ignore a11y_no_static_element_interactions -->
