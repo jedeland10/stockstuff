@@ -47,6 +47,8 @@ export interface StockScores {
 	ticker: string;
 	graham_number: number | null;
 	f_score: number | null;
+	magic_rank: number | null;
+	magic_total: number;
 }
 
 export async function getScores(ticker: string): Promise<StockScores> {

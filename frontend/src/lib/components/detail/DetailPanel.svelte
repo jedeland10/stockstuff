@@ -80,7 +80,7 @@
   <div class="tab-scroll">
     {#if $activeTab === 'overview'}
       <KeyRatios />
-      {#if scores && (scores.graham_number != null || scores.f_score != null)}
+      {#if scores && (scores.graham_number != null || scores.f_score != null || scores.magic_rank != null)}
         <div class="scores-row">
           {#if scores.graham_number != null}
             <div class="score-card">
@@ -100,6 +100,15 @@
               <span class="score-hint" class:text-positive={scores.f_score >= 7} class:text-negative={scores.f_score <= 3}
                 style:color={scores.f_score >= 4 && scores.f_score <= 6 ? 'var(--text-muted)' : ''}>
                 {scores.f_score >= 7 ? 'Strong' : scores.f_score <= 3 ? 'Weak' : 'Neutral'}
+              </span>
+            </div>
+          {/if}
+          {#if scores.magic_rank != null}
+            <div class="score-card">
+              <span class="score-label">Magic Formula</span>
+              <span class="score-value">#{scores.magic_rank}</span>
+              <span class="score-hint" style="color: var(--text-muted)">
+                of {scores.magic_total} stocks
               </span>
             </div>
           {/if}
