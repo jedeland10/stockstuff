@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  backend-tests:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -29,26 +29,31 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: pip install -r requirements.txt pytest pytest-asyncio httpx
 
-      - name: Run backend tests
+      - name: Run tests
         env:
           DATABASE_URL: postgresql://stockdata:stockdata@localhost:5432/stockdata
         run: python -m pytest tests/ -v --tb=short
 
-      - name: Build frontend
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and build
         run: |
           cd frontend
           npm ci
           npm run build
 
   deploy:
-    needs: test
+    needs: [backend-tests, frontend-build]
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -60,7 +65,6 @@ jobs:
           script: |
             DEPLOY_PATH=${{ secrets.VPS_DEPLOY_PATH }}
 
-            # Clone if first deploy, pull if exists
             if [ ! -d "$DEPLOY_PATH" ]; then
               git clone https://github.com/${{ github.repository }}.git "$DEPLOY_PATH"
             fi
@@ -68,7 +72,6 @@ jobs:
             cd "$DEPLOY_PATH"
             git pull origin main
 
-            # Rebuild and restart (pgdata volume persists)
             docker compose down
             docker compose build --no-cache app
             docker compose up -d

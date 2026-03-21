@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     await close_pool()
 
 
-app = FastAPI(title="Nordic Stock Screener", lifespan=lifespan)
+app = FastAPI(title="Stonklens", lifespan=lifespan)
 
 app.include_router(screener.router)
 app.include_router(company.router)
