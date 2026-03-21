@@ -87,7 +87,7 @@
           <td class="num">{stock.pe != null ? stock.pe.toFixed(1) : '\u2014'}</td>
           <td class="num">{stock.ps != null ? stock.ps.toFixed(1) : '\u2014'}</td>
           <td class="num">{stock.pb != null ? stock.pb.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.price != null ? Math.round(stock.price) : '\u2014'}</td>
+          <td class="num">{stock.price != null ? stock.price.toFixed(2) : '\u2014'}</td>
           <td class="dim">{stock.report_quarter ?? '\u2014'}</td>
           <td class="truncate">{stock.sector ?? '\u2014'}</td>
           <td class="num">{stock.ev_ebitda != null ? stock.ev_ebitda.toFixed(1) : '\u2014'}</td>
