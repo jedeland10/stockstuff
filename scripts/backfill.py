@@ -83,10 +83,11 @@ def _fetch_all_financials(ticker: str, session: CffiSession):
                 eps = _safe_float(_get_val(inc, col, "Basic EPS", "Diluted EPS"))
                 operating_income = _safe_float(_get_val(inc, col, "Operating Income"))
                 ebitda = _safe_float(_get_val(inc, col, "EBITDA", "Normalized EBITDA"))
+                gross_profit = _safe_float(_get_val(inc, col, "Gross Profit"))
                 margin = None
                 if revenue and net_income and revenue != 0:
                     margin = round(net_income / revenue * 100, 2)
-                annual.append((ticker, col.year, revenue, operating_income, ebitda, net_income, eps, margin))
+                annual.append((ticker, col.year, revenue, operating_income, ebitda, net_income, eps, margin, gross_profit))
 
         # Quarterly income statement
         quarterly = []
@@ -117,7 +118,15 @@ def _fetch_all_financials(ticker: str, session: CffiSession):
                     net_debt = total_debt - cash
                 total_equity = _safe_float(_get_val(bs, col, "Stockholders Equity", "Total Equity Gross Minority Interest"))
                 intangible = _safe_float(_get_val(bs, col, "Goodwill And Other Intangible Assets", "Intangible Assets"))
-                balance.append((ticker, col.year, total_assets, total_debt, _safe_float(net_debt), cash, total_equity, intangible))
+                current_assets = _safe_float(_get_val(bs, col, "Current Assets"))
+                current_liabilities = _safe_float(_get_val(bs, col, "Current Liabilities"))
+                net_fixed_assets = None
+                if total_assets is not None and current_assets is not None:
+                    nfa = total_assets - current_assets
+                    if intangible is not None:
+                        nfa -= intangible
+                    net_fixed_assets = _safe_float(nfa)
+                balance.append((ticker, col.year, total_assets, total_debt, _safe_float(net_debt), cash, total_equity, intangible, current_assets, current_liabilities, net_fixed_assets))
 
         # Cash flow
         cashflows = []
@@ -178,12 +187,13 @@ async def backfill():
 
             if annual:
                 await conn.executemany("""
-                    INSERT INTO financials_annual (ticker, year, revenue, operating_income, ebitda, net_income, eps, profit_margin)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    INSERT INTO financials_annual (ticker, year, revenue, operating_income, ebitda, net_income, eps, profit_margin, gross_profit)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     ON CONFLICT (ticker, year) DO UPDATE SET
                         revenue=EXCLUDED.revenue, operating_income=EXCLUDED.operating_income,
                         ebitda=EXCLUDED.ebitda, net_income=EXCLUDED.net_income,
-                        eps=EXCLUDED.eps, profit_margin=EXCLUDED.profit_margin
+                        eps=EXCLUDED.eps, profit_margin=EXCLUDED.profit_margin,
+                        gross_profit=EXCLUDED.gross_profit
                 """, annual)
                 logger.info(f"  {len(annual)} annual rows")
 
@@ -200,12 +210,14 @@ async def backfill():
 
             if balance:
                 await conn.executemany("""
-                    INSERT INTO balance_sheet (ticker, year, total_assets, total_debt, net_debt, cash, total_equity, intangible_assets)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    INSERT INTO balance_sheet (ticker, year, total_assets, total_debt, net_debt, cash, total_equity, intangible_assets, current_assets, current_liabilities, net_fixed_assets)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                     ON CONFLICT (ticker, year) DO UPDATE SET
                         total_assets=EXCLUDED.total_assets, total_debt=EXCLUDED.total_debt,
                         net_debt=EXCLUDED.net_debt, cash=EXCLUDED.cash,
-                        total_equity=EXCLUDED.total_equity, intangible_assets=EXCLUDED.intangible_assets
+                        total_equity=EXCLUDED.total_equity, intangible_assets=EXCLUDED.intangible_assets,
+                        current_assets=EXCLUDED.current_assets, current_liabilities=EXCLUDED.current_liabilities,
+                        net_fixed_assets=EXCLUDED.net_fixed_assets
                 """, balance)
                 logger.info(f"  {len(balance)} balance sheet rows")
 

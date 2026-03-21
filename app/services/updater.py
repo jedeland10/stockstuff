@@ -27,13 +27,15 @@ async def refresh_fundamentals():
                 UPDATE fundamentals SET
                     price=$1, change_pct=$2, pe=$3, pb=$4, ps=$5, ev_ebitda=$6,
                     div_yield=$7, roe=$8, margin=$9, eps=$10, revenue=$11,
-                    revenue_growth=$12, updated_at=NOW()::text
-                WHERE ticker=$13
+                    revenue_growth=$12, shares_outstanding=$13, enterprise_value=$14,
+                    book_value_per_share=$15, updated_at=NOW()::text
+                WHERE ticker=$16
             """,
                 info["price"], info["change_pct"], info["pe"], info["pb"],
                 info["ps"], info["ev_ebitda"], info["div_yield"], info["roe"],
                 info["margin"], info["eps"], info["revenue"],
-                info["revenue_growth"], ticker,
+                info["revenue_growth"], info["shares_outstanding"],
+                info["enterprise_value"], info["book_value_per_share"], ticker,
             )
             updated += 1
 

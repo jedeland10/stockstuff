@@ -1,6 +1,6 @@
 <script lang="ts">
   import { companyData, activeTab, selectedTicker, chartData } from '$lib/stores/screener';
-  import { getChart } from '$lib/api/client';
+  import { getChart, getScores, type StockScores } from '$lib/api/client';
   import DetailHeader from './DetailHeader.svelte';
   import TabBar from './TabBar.svelte';
   import PriceChart from './overview/PriceChart.svelte';
@@ -12,12 +12,23 @@
   import CandlestickChart from './technical/CandlestickChart.svelte';
   import PerformanceRow from './technical/PerformanceRow.svelte';
   import TechnicalIndicators from './technical/TechnicalIndicators.svelte';
-  import { fmtLarge } from '$lib/utils/format';
+  import { fmtLarge, fmt } from '$lib/utils/format';
   import type { PricePoint } from '$lib/api/types';
 
   let chartPeriod = $state('1y');
   let techPeriod = $state('1y');
   let techData = $state<PricePoint[]>([]);
+  let scores = $state<StockScores | null>(null);
+
+  // Fetch scores when ticker changes
+  $effect(() => {
+    const ticker = $selectedTicker;
+    if (ticker) {
+      getScores(ticker).then(s => scores = s);
+    } else {
+      scores = null;
+    }
+  });
 
   let finData = $derived.by(() => {
     const cd = $companyData;
@@ -69,6 +80,31 @@
   <div class="tab-scroll">
     {#if $activeTab === 'overview'}
       <KeyRatios />
+      {#if scores && (scores.graham_number != null || scores.f_score != null)}
+        <div class="scores-row">
+          {#if scores.graham_number != null}
+            <div class="score-card">
+              <span class="score-label">Graham Number</span>
+              <span class="score-value">{fmt(scores.graham_number)}</span>
+              {#if $companyData?.price}
+                <span class="score-hint" class:text-positive={scores.graham_number > $companyData.price} class:text-negative={scores.graham_number <= $companyData.price}>
+                  {scores.graham_number > $companyData.price ? 'Undervalued' : 'Overvalued'}
+                </span>
+              {/if}
+            </div>
+          {/if}
+          {#if scores.f_score != null}
+            <div class="score-card">
+              <span class="score-label">Piotroski F-Score</span>
+              <span class="score-value">{scores.f_score}<span class="score-max">/9</span></span>
+              <span class="score-hint" class:text-positive={scores.f_score >= 7} class:text-negative={scores.f_score <= 3}
+                style:color={scores.f_score >= 4 && scores.f_score <= 6 ? 'var(--text-muted)' : ''}>
+                {scores.f_score >= 7 ? 'Strong' : scores.f_score <= 3 ? 'Weak' : 'Neutral'}
+              </span>
+            </div>
+          {/if}
+        </div>
+      {/if}
       <div class="period-bar">
         {#each periods as p}
           <button class="period" class:active={chartPeriod === p} onclick={() => setChartPeriod(p)}>{p}</button>
@@ -145,4 +181,44 @@
   }
   .period:hover { color: var(--text-muted); }
   .period.active { color: var(--accent); background: var(--bg); }
+
+  .scores-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-card {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .score-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .score-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .score-max {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .score-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+  }
 </style>

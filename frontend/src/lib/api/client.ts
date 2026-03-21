@@ -42,3 +42,14 @@ export async function getCountries(): Promise<string[]> {
 	const res = await fetch(`${BASE}/meta/countries`);
 	return res.json();
 }
+
+export interface StockScores {
+	ticker: string;
+	graham_number: number | null;
+	f_score: number | null;
+}
+
+export async function getScores(ticker: string): Promise<StockScores> {
+	const res = await fetch(`${BASE}/scores/${encodeURIComponent(ticker)}`);
+	return res.json();
+}

@@ -71,20 +71,24 @@ async def import_tickers():
                 """INSERT INTO fundamentals
                 (ticker, price, change_pct, pe, pb, ps, ev_ebitda,
                  div_yield, roe, margin, eps, revenue, revenue_growth,
-                 perf_1y, report_quarter, updated_at)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()::text)
+                 perf_1y, report_quarter, shares_outstanding, enterprise_value,
+                 book_value_per_share, updated_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,NOW()::text)
                 ON CONFLICT (ticker) DO UPDATE SET
                     price=EXCLUDED.price, change_pct=EXCLUDED.change_pct,
                     pe=EXCLUDED.pe, pb=EXCLUDED.pb, ps=EXCLUDED.ps, ev_ebitda=EXCLUDED.ev_ebitda,
                     div_yield=EXCLUDED.div_yield, roe=EXCLUDED.roe, margin=EXCLUDED.margin,
                     eps=EXCLUDED.eps, revenue=EXCLUDED.revenue, revenue_growth=EXCLUDED.revenue_growth,
                     perf_1y=EXCLUDED.perf_1y, report_quarter=EXCLUDED.report_quarter,
-                    updated_at=EXCLUDED.updated_at""",
+                    shares_outstanding=EXCLUDED.shares_outstanding, enterprise_value=EXCLUDED.enterprise_value,
+                    book_value_per_share=EXCLUDED.book_value_per_share, updated_at=EXCLUDED.updated_at""",
                 ticker, info["price"], info["change_pct"],
                 info["pe"], info["pb"], info["ps"], info["ev_ebitda"],
                 info["div_yield"], info["roe"], info["margin"],
                 info["eps"], info["revenue"], info["revenue_growth"],
                 info["perf_1y"], info["report_quarter"],
+                info["shares_outstanding"], info["enterprise_value"],
+                info["book_value_per_share"],
             )
             success += 1
             time.sleep(1.5)

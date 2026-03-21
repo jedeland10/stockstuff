@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.database import create_pool, close_pool
 from app.services.updater import start_scheduler
-from app.routers import screener, company, chart
+from app.routers import screener, company, chart, scores
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,6 +32,7 @@ app = FastAPI(title="Nordic Stock Screener", lifespan=lifespan)
 app.include_router(screener.router)
 app.include_router(company.router)
 app.include_router(chart.router)
+app.include_router(scores.router)
 
 # Mount SvelteKit's _app directory for immutable assets
 if (FRONTEND_DIR / "_app").exists():

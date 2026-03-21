@@ -121,11 +121,18 @@ async def _run_schema(conn: asyncpg.Connection):
             );
     """)
 
-    # Add columns to financials_annual if they don't exist (migration-safe)
+    # Add columns if they don't exist (migration-safe)
     await conn.execute("""
         DO $$ BEGIN
             ALTER TABLE financials_annual ADD COLUMN IF NOT EXISTS operating_income DOUBLE PRECISION;
             ALTER TABLE financials_annual ADD COLUMN IF NOT EXISTS ebitda DOUBLE PRECISION;
+            ALTER TABLE financials_annual ADD COLUMN IF NOT EXISTS gross_profit DOUBLE PRECISION;
+            ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS shares_outstanding DOUBLE PRECISION;
+            ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS enterprise_value DOUBLE PRECISION;
+            ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS book_value_per_share DOUBLE PRECISION;
+            ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS current_assets DOUBLE PRECISION;
+            ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS current_liabilities DOUBLE PRECISION;
+            ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS net_fixed_assets DOUBLE PRECISION;
         EXCEPTION WHEN others THEN NULL;
         END $$;
     """)

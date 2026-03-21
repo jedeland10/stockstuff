@@ -73,6 +73,9 @@ def fetch_stock_info(ticker: str) -> Optional[dict]:
             "revenue_growth": _pct(info.get("revenueGrowth")),
             "perf_1y": _pct(info.get("52WeekChange")),
             "report_quarter": _report_quarter(info.get("mostRecentQuarter")),
+            "shares_outstanding": _safe_float(info.get("sharesOutstanding")),
+            "enterprise_value": _safe_float(info.get("enterpriseValue")),
+            "book_value_per_share": _safe_float(info.get("bookValue")),
         }
     except Exception as e:
         logger.warning(f"Failed to fetch {ticker}: {e}")
@@ -121,6 +124,7 @@ def fetch_annual_financials(ticker: str) -> list[dict]:
                 margin = round(net_income / revenue * 100, 2)
             operating_income = _get_val(inc, col, "Operating Income")
             ebitda = _get_val(inc, col, "EBITDA", "Normalized EBITDA")
+            gross_profit = _get_val(inc, col, "Gross Profit")
             rows.append({
                 "ticker": ticker,
                 "year": year,
@@ -130,6 +134,7 @@ def fetch_annual_financials(ticker: str) -> list[dict]:
                 "net_income": net_income,
                 "eps": eps_val,
                 "profit_margin": margin,
+                "gross_profit": _safe_float(gross_profit),
             })
         return rows
     except Exception as e:
@@ -225,6 +230,15 @@ def fetch_balance_sheet(ticker: str) -> list[dict]:
                                     "Total Equity Gross Minority Interest")
             intangible_assets = _get_val(bs, col, "Goodwill And Other Intangible Assets",
                                          "Intangible Assets")
+            current_assets = _get_val(bs, col, "Current Assets")
+            current_liabilities = _get_val(bs, col, "Current Liabilities")
+            # Net fixed assets = total assets - current assets - intangible assets
+            net_fixed_assets = None
+            if total_assets is not None and current_assets is not None:
+                nfa = total_assets - current_assets
+                if intangible_assets is not None:
+                    nfa -= intangible_assets
+                net_fixed_assets = nfa
             rows.append({
                 "ticker": ticker,
                 "year": year,
@@ -234,6 +248,9 @@ def fetch_balance_sheet(ticker: str) -> list[dict]:
                 "cash": _safe_float(cash),
                 "total_equity": _safe_float(total_equity),
                 "intangible_assets": _safe_float(intangible_assets),
+                "current_assets": _safe_float(current_assets),
+                "current_liabilities": _safe_float(current_liabilities),
+                "net_fixed_assets": _safe_float(net_fixed_assets),
             })
         return rows
     except Exception as e:
