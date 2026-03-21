@@ -102,20 +102,20 @@ async def refresh_prices():
 def start_scheduler():
     tz = "Europe/Stockholm"
     scheduler.add_job(
-        lambda: asyncio.create_task(refresh_fundamentals()),
+        refresh_fundamentals,
         "cron",
-        hour=12, minute=0,
+        hour=12, minute=15,
         timezone=tz,
         id="refresh_fundamentals",
         replace_existing=True,
     )
     scheduler.add_job(
-        lambda: asyncio.create_task(refresh_prices()),
+        refresh_prices,
         "cron",
-        hour=12, minute=0,
+        hour=12, minute=15,
         timezone=tz,
         id="refresh_prices",
         replace_existing=True,
     )
     scheduler.start()
-    logger.info("Scheduler started — fundamentals + prices daily at 18:00 (Europe/Stockholm)")
+    logger.info("Scheduler started — fundamentals + prices daily at 12:00 (Europe/Stockholm)")
