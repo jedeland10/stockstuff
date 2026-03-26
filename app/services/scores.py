@@ -107,6 +107,92 @@ def piotroski_f_score(
     return score
 
 
+def piotroski_f_score_detailed(
+    net_income: Optional[float],
+    operating_cf: Optional[float],
+    total_assets: Optional[float],
+    total_assets_prev: Optional[float],
+    total_debt: Optional[float],
+    total_debt_prev: Optional[float],
+    current_assets: Optional[float],
+    current_liabilities: Optional[float],
+    current_assets_prev: Optional[float],
+    current_liabilities_prev: Optional[float],
+    shares_outstanding: Optional[float],
+    shares_outstanding_prev: Optional[float],
+    gross_profit: Optional[float],
+    revenue: Optional[float],
+    gross_profit_prev: Optional[float],
+    revenue_prev: Optional[float],
+    net_income_prev: Optional[float],
+) -> Optional[dict]:
+    """Piotroski F-Score with sub-category breakdown.
+    Returns dict with total, profitability (0-4), leverage (0-3), efficiency (0-2)."""
+    profitability = 0
+    leverage = 0
+    efficiency = 0
+    checks = 0
+
+    # Profitability (4 tests)
+    if net_income is not None:
+        if net_income > 0:
+            profitability += 1
+        checks += 1
+
+    if operating_cf is not None:
+        if operating_cf > 0:
+            profitability += 1
+        checks += 1
+
+    if net_income is not None and total_assets and net_income_prev is not None and total_assets_prev:
+        if (net_income / total_assets) > (net_income_prev / total_assets_prev):
+            profitability += 1
+        checks += 1
+
+    if operating_cf is not None and net_income is not None:
+        if operating_cf > net_income:
+            profitability += 1
+        checks += 1
+
+    # Leverage (3 tests)
+    if total_debt is not None and total_debt_prev is not None:
+        if total_debt < total_debt_prev:
+            leverage += 1
+        checks += 1
+
+    if (current_assets and current_liabilities and
+            current_assets_prev and current_liabilities_prev):
+        if (current_assets / current_liabilities) > (current_assets_prev / current_liabilities_prev):
+            leverage += 1
+        checks += 1
+
+    if shares_outstanding is not None and shares_outstanding_prev is not None:
+        if shares_outstanding <= shares_outstanding_prev:
+            leverage += 1
+        checks += 1
+
+    # Efficiency (2 tests)
+    if gross_profit and revenue and gross_profit_prev and revenue_prev:
+        if (gross_profit / revenue) > (gross_profit_prev / revenue_prev):
+            efficiency += 1
+        checks += 1
+
+    if revenue and total_assets and revenue_prev and total_assets_prev:
+        if (revenue / total_assets) > (revenue_prev / total_assets_prev):
+            efficiency += 1
+        checks += 1
+
+    if checks < 4:
+        return None
+
+    return {
+        "f_score": profitability + leverage + efficiency,
+        "profitability": profitability,
+        "leverage": leverage,
+        "efficiency": efficiency,
+    }
+
+
 def magic_formula_ranks(stocks: list[dict]) -> list[dict]:
     """Compute Magic Formula rank for a list of stocks.
     Each stock dict needs: ticker, operating_income, enterprise_value, net_fixed_assets,

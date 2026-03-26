@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import ScreenerFilters from '$lib/components/screener/ScreenerFilters.svelte';
   import ScreenerTable from '$lib/components/screener/ScreenerTable.svelte';
+  import ScoreRanking from '$lib/components/screener/ScoreRanking.svelte';
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
   import { getScreener, getCompany, getChart } from '$lib/api/client';
   import { selectedTicker, companyData, chartData, activeTab } from '$lib/stores/screener';
@@ -14,6 +15,7 @@
   let hasMore = $state(true);
   let panelWidth = $state(Math.round(window.innerWidth * 2 / 5));
   let watchlistActive = $state(false);
+  let rankingsActive = $state(false);
 
   const PAGE_SIZE = 100;
   let currentFilters = $state<{ country: string|null; sector: string; search: string }>({ country: null, sector: '', search: '' });
@@ -178,11 +180,15 @@
 </script>
 
 <div class="app">
-  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} />
+  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={() => rankingsActive = !rankingsActive} />
 
   <div class="main">
     <div class="table-panel">
-      <ScreenerTable stocks={displayStocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
+      {#if rankingsActive}
+        <ScoreRanking onSelect={selectStock} />
+      {:else}
+        <ScreenerTable stocks={displayStocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
+      {/if}
     </div>
 
     {#if $selectedTicker}

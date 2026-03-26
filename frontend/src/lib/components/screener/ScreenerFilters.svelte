@@ -5,12 +5,14 @@
   import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
   import { theme } from '$lib/stores/theme';
 
-  let { total, onFilter, watchlistActive, onToggleWatchlist, onExport }: {
+  let { total, onFilter, watchlistActive, onToggleWatchlist, onExport, rankingsActive, onToggleRankings }: {
     total: number;
     onFilter: (f: { country: string|null; sector: string; search: string }) => void;
     watchlistActive: boolean;
     onToggleWatchlist: () => void;
     onExport: () => void;
+    rankingsActive: boolean;
+    onToggleRankings: () => void;
   } = $props();
 
   let country = $state<string | null>(null);
@@ -95,6 +97,15 @@
     {#if $watchlist.size > 0}
       <span class="watchlist-count">{$watchlist.size}</span>
     {/if}
+  </button>
+
+  <button class="rankings-btn" class:active={rankingsActive} onclick={onToggleRankings} title="Score rankings">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="10" width="3" height="5" rx="0.5"/>
+      <rect x="6.5" y="5" width="3" height="10" rx="0.5"/>
+      <rect x="12" y="1" width="3" height="14" rx="0.5"/>
+    </svg>
+    <span>Rankings</span>
   </button>
 
   <div class="columns-wrap">
@@ -288,6 +299,32 @@
   }
   .watchlist-btn.active .watchlist-count {
     background: rgba(210, 153, 34, 0.15);
+  }
+
+  .rankings-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .rankings-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+  .rankings-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
   }
 
   .columns-wrap {

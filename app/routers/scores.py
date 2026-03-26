@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from app.database import get_pool
-from app.services.scores import graham_number, piotroski_f_score, magic_formula_ranks
+from app.services.scores import graham_number, piotroski_f_score, piotroski_f_score_detailed, magic_formula_ranks
 
 router = APIRouter(prefix="/api")
 
@@ -128,3 +128,68 @@ async def get_magic_formula_ranking(limit: int = Query(50, le=200)):
         ranked = magic_formula_ranks(stock_list)
 
     return ranked[:limit]
+
+
+@router.get("/scores/f-score/ranking")
+async def get_f_score_ranking(limit: int = Query(50, le=200)):
+    """Get stocks ranked by Piotroski F-Score (highest first)."""
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        stocks = await conn.fetch("""
+            SELECT s.ticker, s.name, s.country, s.sector, fun.pe, fun.price
+            FROM fundamentals fun
+            JOIN stocks s ON s.ticker = fun.ticker
+        """)
+
+        results = []
+        for stock in stocks:
+            t = stock["ticker"]
+            fin_rows = await conn.fetch(
+                "SELECT year, revenue, net_income, gross_profit FROM financials_annual WHERE ticker = $1 ORDER BY year DESC LIMIT 2",
+                t,
+            )
+            bs_rows = await conn.fetch(
+                "SELECT year, total_assets, total_debt, current_assets, current_liabilities FROM balance_sheet WHERE ticker = $1 ORDER BY year DESC LIMIT 2",
+                t,
+            )
+            cf_rows = await conn.fetch(
+                "SELECT year, operating_cf FROM cashflow WHERE ticker = $1 ORDER BY year DESC LIMIT 1",
+                t,
+            )
+
+            if len(fin_rows) < 2 or len(bs_rows) < 2 or not cf_rows:
+                continue
+
+            detail = piotroski_f_score_detailed(
+                net_income=fin_rows[0]["net_income"],
+                operating_cf=cf_rows[0]["operating_cf"],
+                total_assets=bs_rows[0]["total_assets"],
+                total_assets_prev=bs_rows[1]["total_assets"],
+                total_debt=bs_rows[0]["total_debt"],
+                total_debt_prev=bs_rows[1]["total_debt"],
+                current_assets=bs_rows[0]["current_assets"],
+                current_liabilities=bs_rows[0]["current_liabilities"],
+                current_assets_prev=bs_rows[1]["current_assets"],
+                current_liabilities_prev=bs_rows[1]["current_liabilities"],
+                shares_outstanding=None,
+                shares_outstanding_prev=None,
+                gross_profit=fin_rows[0]["gross_profit"],
+                revenue=fin_rows[0]["revenue"],
+                gross_profit_prev=fin_rows[1]["gross_profit"],
+                revenue_prev=fin_rows[1]["revenue"],
+                net_income_prev=fin_rows[1]["net_income"],
+            )
+            if detail is not None:
+                results.append({
+                    "ticker": t,
+                    "name": stock["name"],
+                    "country": stock["country"],
+                    "sector": stock["sector"],
+                    "pe": stock["pe"],
+                    "price": stock["price"],
+                    **detail,
+                })
+
+        results.sort(key=lambda x: x["f_score"], reverse=True)
+
+    return results[:limit]

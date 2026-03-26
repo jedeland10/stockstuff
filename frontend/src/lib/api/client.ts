@@ -55,3 +55,38 @@ export async function getScores(ticker: string): Promise<StockScores> {
 	const res = await fetch(`${BASE}/scores/${encodeURIComponent(ticker)}`);
 	return res.json();
 }
+
+export interface MagicFormulaEntry {
+	ticker: string;
+	name: string;
+	country: string;
+	sector: string;
+	pe: number | null;
+	price: number | null;
+	earnings_yield: number | null;
+	return_on_capital: number | null;
+	magic_rank: number;
+}
+
+export interface FScoreEntry {
+	ticker: string;
+	name: string;
+	country: string;
+	sector: string;
+	pe: number | null;
+	price: number | null;
+	f_score: number;
+	profitability: number;
+	leverage: number;
+	efficiency: number;
+}
+
+export async function getMagicFormulaRanking(limit = 200): Promise<MagicFormulaEntry[]> {
+	const res = await fetch(`${BASE}/scores/magic-formula/ranking?limit=${limit}`);
+	return res.json();
+}
+
+export async function getFScoreRanking(limit = 200): Promise<FScoreEntry[]> {
+	const res = await fetch(`${BASE}/scores/f-score/ranking?limit=${limit}`);
+	return res.json();
+}
