@@ -113,8 +113,8 @@
 </div>
 
 <style>
-  .price-chart { display: flex; flex-direction: column; height: 336px; padding: 8px 10px; flex-shrink: 0; }
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-shrink: 0; }
+  .price-chart { display: flex; flex-direction: column; height: 340px; padding: 10px 16px; flex-shrink: 0; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-shrink: 0; }
   .title { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-  .chart-wrap { flex: 1; min-height: 200px; border-radius: 5px; overflow: hidden; }
+  .chart-wrap { flex: 1; min-height: 200px; border-radius: 8px; overflow: hidden; }
 </style>

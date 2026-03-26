@@ -83,31 +83,42 @@
       {#if scores && (scores.graham_number != null || scores.f_score != null || scores.magic_rank != null)}
         <div class="scores-row">
           {#if scores.graham_number != null}
-            <div class="score-card">
+            {@const isUnder = $companyData?.price ? scores.graham_number > $companyData.price : false}
+            <div class="score-card" title="Graham Number estimates intrinsic value based on EPS and book value. Compare to current price.">
               <span class="score-label">Graham Number</span>
               <span class="score-value">{fmt(scores.graham_number)}</span>
               {#if $companyData?.price}
-                <span class="score-hint" class:text-positive={scores.graham_number > $companyData.price} class:text-negative={scores.graham_number <= $companyData.price}>
-                  {scores.graham_number > $companyData.price ? 'Undervalued' : 'Overvalued'}
+                <span class="score-badge" class:badge-positive={isUnder} class:badge-negative={!isUnder}>
+                  {isUnder ? 'Undervalued' : 'Overvalued'}
                 </span>
               {/if}
             </div>
           {/if}
           {#if scores.f_score != null}
-            <div class="score-card">
+            {@const level = scores.f_score >= 7 ? 'strong' : scores.f_score <= 3 ? 'weak' : 'neutral'}
+            <div class="score-card" title="Piotroski F-Score rates financial strength from 0-9. 7+ is strong, 3 or below is weak.">
               <span class="score-label">Piotroski F-Score</span>
-              <span class="score-value">{scores.f_score}<span class="score-max">/9</span></span>
-              <span class="score-hint" class:text-positive={scores.f_score >= 7} class:text-negative={scores.f_score <= 3}
-                style:color={scores.f_score >= 4 && scores.f_score <= 6 ? 'var(--text-muted)' : ''}>
-                {scores.f_score >= 7 ? 'Strong' : scores.f_score <= 3 ? 'Weak' : 'Neutral'}
+              <div class="score-row">
+                <span class="score-value">{scores.f_score}<span class="score-max">/9</span></span>
+                <div class="score-dots">
+                  {#each Array(9) as _, i}
+                    <span class="dot" class:dot-filled={i < scores.f_score}
+                      class:dot-positive={level === 'strong'}
+                      class:dot-negative={level === 'weak'}
+                      class:dot-neutral={level === 'neutral'}></span>
+                  {/each}
+                </div>
+              </div>
+              <span class="score-badge" class:badge-positive={level === 'strong'} class:badge-negative={level === 'weak'} class:badge-neutral={level === 'neutral'}>
+                {level === 'strong' ? 'Strong' : level === 'weak' ? 'Weak' : 'Neutral'}
               </span>
             </div>
           {/if}
           {#if scores.magic_rank != null}
-            <div class="score-card">
+            <div class="score-card" title="Magic Formula ranks stocks by combined earnings yield and return on capital. Lower rank = better.">
               <span class="score-label">Magic Formula</span>
               <span class="score-value">#{scores.magic_rank}</span>
-              <span class="score-hint" style="color: var(--text-muted)">
+              <span class="score-hint">
                 of {scores.magic_total} stocks
               </span>
             </div>
@@ -165,48 +176,53 @@
   .fin-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 150px);
-    gap: 6px;
-    padding: 6px 10px;
+    grid-template-rows: repeat(2, 170px);
+    gap: 8px;
+    padding: 10px 16px;
     border-top: 1px solid var(--border);
   }
   .period-bar {
     display: flex;
-    gap: 1px;
-    padding: 6px 10px;
+    gap: 2px;
+    padding: 8px 16px;
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
   .period {
-    padding: 3px 8px;
+    padding: 4px 10px;
     border: none;
     background: transparent;
     color: var(--text-dim);
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 6px;
+    transition: all 0.15s;
   }
-  .period:hover { color: var(--text-muted); }
-  .period.active { color: var(--accent); background: var(--bg); }
+  .period:hover { color: var(--text-muted); background: var(--bg-hover); }
+  .period.active { color: var(--accent); background: var(--accent-dim); }
 
   .scores-row {
     display: flex;
     gap: 8px;
-    padding: 8px 14px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
   }
   .score-card {
     flex: 1;
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 8px;
     padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
+    cursor: default;
+    transition: border-color 0.15s;
   }
+  .score-card:hover { border-color: var(--text-dim); }
   .score-label {
     font-family: var(--font-mono);
     font-size: 9px;
@@ -216,18 +232,53 @@
   }
   .score-value {
     font-family: var(--font-mono);
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--text);
+    letter-spacing: -0.5px;
   }
   .score-max {
     font-size: 12px;
     color: var(--text-dim);
     font-weight: 400;
   }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+  }
+  .dot-filled.dot-positive { background: var(--positive); border-color: var(--positive); }
+  .dot-filled.dot-negative { background: var(--negative); border-color: var(--negative); }
+  .dot-filled.dot-neutral { background: var(--gold); border-color: var(--gold); }
+
+  .score-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+  .badge-positive { color: var(--positive); background: rgba(46, 160, 67, 0.1); }
+  .badge-negative { color: var(--negative); background: rgba(218, 54, 51, 0.1); }
+  .badge-neutral { color: var(--gold); background: rgba(212, 160, 23, 0.1); }
+
   .score-hint {
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 500;
+    color: var(--text-muted);
   }
 </style>

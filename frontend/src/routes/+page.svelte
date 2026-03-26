@@ -120,7 +120,13 @@
     background: var(--bg);
     border-left: 1px solid var(--border);
     z-index: 10;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.5);
+    animation: slide-in 0.2s ease-out;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   .resize-handle {

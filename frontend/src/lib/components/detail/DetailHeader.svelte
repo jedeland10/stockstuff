@@ -5,80 +5,150 @@
 
 {#if $companyData}
 <div class="header">
-  <button class="close" onclick={() => { selectedTicker.set(null); companyData.set(null); chartData.set([]); activeTab.set('overview'); }}>&times;</button>
-  <div class="row">
-    <span class="name">{$companyData.name}</span>
-    <span class="ticker">{$companyData.ticker}</span>
+  <div class="top-row">
+    <div class="identity">
+      <h1 class="name">{$companyData.name}</h1>
+      <span class="ticker">{$companyData.ticker}</span>
+    </div>
+    <button class="close" onclick={() => { selectedTicker.set(null); companyData.set(null); chartData.set([]); activeTab.set('overview'); }}
+      aria-label="Close panel">
+      <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+        <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="price-row">
     <span class="price">{fmt($companyData.price)}</span>
+    <span class="currency">SEK</span>
     <span class={($companyData.change_pct ?? 0) >= 0 ? 'change pos' : 'change neg'}>
       {($companyData.change_pct ?? 0) >= 0 ? '+' : ''}{fmt($companyData.change_pct)}%
     </span>
   </div>
+
   <div class="meta">
-    <span>Sector: {$companyData.sector || '\u2014'}</span>
-    <span>Industry: {$companyData.industry || '\u2014'}</span>
-    <span>Country: {$companyData.country || '\u2014'}</span>
-    <span>MCap: {fmtLarge($companyData.market_cap)}</span>
+    {#each [
+      { label: 'Sector', value: $companyData.sector },
+      { label: 'Industry', value: $companyData.industry },
+      { label: 'Country', value: $companyData.country },
+      { label: 'MCap', value: fmtLarge($companyData.market_cap) },
+    ] as item}
+      <span class="meta-item">
+        <span class="meta-label">{item.label}</span>
+        {item.value || '\u2014'}
+      </span>
+    {/each}
   </div>
 </div>
 {/if}
 
 <style>
   .header {
-    padding: 10px 14px;
+    padding: 14px 16px 12px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-surface);
     flex-shrink: 0;
   }
-  .close {
-    float: right;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
+
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
   }
-  .close:hover {
-    color: var(--text);
-  }
-  .row {
+  .identity {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 8px;
+    min-width: 0;
     flex-wrap: wrap;
   }
   .name {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .ticker {
     font-family: var(--font-mono);
     font-size: 12px;
     color: var(--accent);
+    background: var(--accent-dim);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .close {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .close:hover {
+    color: var(--text);
+    background: var(--bg-hover);
+    border-color: var(--border);
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 8px;
   }
   .price {
     font-family: var(--font-mono);
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .currency {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
   }
   .change {
     font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
   }
   .pos {
     color: var(--positive);
+    background: rgba(46, 160, 67, 0.1);
   }
   .neg {
     color: var(--negative);
+    background: rgba(218, 54, 51, 0.1);
   }
+
   .meta {
-    font-size: 11px;
-    color: var(--text-muted);
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 12px;
-    margin-top: 4px;
+    gap: 4px 8px;
+    margin-top: 10px;
+  }
+  .meta-item {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(48, 54, 61, 0.5);
+  }
+  .meta-label {
+    color: var(--text-dim);
+    margin-right: 4px;
   }
 </style>

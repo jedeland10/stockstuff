@@ -24,27 +24,29 @@
 <style>
   .tab-bar {
     display: flex;
+    gap: 2px;
+    padding: 0 12px;
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
   .tab {
-    padding: 7px 16px;
+    padding: 10px 14px;
     border: none;
     background: transparent;
     color: var(--text-muted);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
     transition: all 0.15s;
+    position: relative;
   }
   .tab:hover {
     color: var(--text);
-    background: var(--bg-hover);
   }
   .tab.active {
     color: var(--accent);

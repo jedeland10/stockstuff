@@ -8,13 +8,13 @@
 	--text-muted: #8b949e;
 	--text-dim: #484f58;
 	--accent: #00bcd4;
-	--accent-dim: #00bcd433;
-	--positive: #2ea043;
-	--negative: #da3633;
-	--gold: #d4a017;
+	--accent-dim: #00bcd420;
+	--positive: #3fb950;
+	--negative: #f85149;
+	--gold: #d29922;
 	--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-	--font-ui: 'DM Sans', system-ui, sans-serif;
-	--radius: 5px;
+	--font-ui: 'Inter', 'DM Sans', system-ui, sans-serif;
+	--radius: 8px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,11 +27,14 @@ html, body {
 	font-size: 13px;
 	line-height: 1.4;
 	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
 /* Hide TradingView attribution */
 a[href*="tradingview.com"] { display: none !important; }
