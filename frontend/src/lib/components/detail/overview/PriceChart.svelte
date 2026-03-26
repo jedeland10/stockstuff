@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
   import type { PricePoint } from '$lib/api/types';
+  import { cssVar, theme } from '$lib/stores/theme';
 
   let { data, ticker }: { data: PricePoint[]; ticker: string } = $props();
 
@@ -39,31 +40,38 @@
       if (container.clientWidth < 50) return;
     }
 
+    const bg = cssVar('--bg');
+    const textMuted = cssVar('--text-muted');
+    const grid = cssVar('--chart-grid');
+    const border = cssVar('--border');
+    const accent = cssVar('--accent');
+    const volume = cssVar('--chart-volume');
+
     chart = LW.createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
       watermark: { visible: false },
       layout: {
-        background: { type: 'solid', color: '#0d1117' },
-        textColor: '#8b949e',
+        background: { type: 'solid', color: bg },
+        textColor: textMuted,
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 10,
       },
-      grid: { vertLines: { color: '#21262d' }, horzLines: { color: '#21262d' } },
+      grid: { vertLines: { color: grid }, horzLines: { color: grid } },
       crosshair: { mode: LW.CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#30363d' },
-      timeScale: { borderColor: '#30363d', timeVisible: false },
+      rightPriceScale: { borderColor: border },
+      timeScale: { borderColor: border, timeVisible: false },
     });
 
     areaSeries = chart.addAreaSeries({
-      topColor: 'rgba(0, 188, 212, 0.3)',
-      bottomColor: 'rgba(0, 188, 212, 0.02)',
-      lineColor: '#00bcd4',
+      topColor: accent + '4d',
+      bottomColor: accent + '05',
+      lineColor: accent,
       lineWidth: 2,
     });
 
     volumeSeries = chart.addHistogramSeries({
-      color: '#30363d',
+      color: volume,
       priceFormat: { type: 'volume' },
       priceScaleId: '',
     });
@@ -84,21 +92,18 @@
     areaSeries.setData(data.map(d => ({ time: d.date, value: d.close ?? 0 })));
     volumeSeries.setData(data.map(d => ({
       time: d.date, value: d.volume ?? 0,
-      color: (d.close ?? 0) >= (d.open ?? 0) ? '#2ea04344' : '#da363344',
+      color: (d.close ?? 0) >= (d.open ?? 0) ? cssVar('--positive') + '44' : cssVar('--negative') + '44',
     })));
     chart?.timeScale().fitContent();
   }
 
   $effect(() => {
-    // Trigger on data or ticker change
+    // Trigger on data, ticker, or theme change
     const _ = data;
     const __ = ticker;
+    const ___ = $theme;
     if (data.length && container) {
-      if (chart && areaSeries) {
-        applyData();
-      } else {
-        createAndApply();
-      }
+      createAndApply();
     }
   });
 

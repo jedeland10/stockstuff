@@ -3,8 +3,10 @@
   import BarChart from '$lib/components/shared/BarChart.svelte';
   import { fmtLarge, fmtPct, fmtNum } from '$lib/utils/format';
 
-  const signColor = (v: number | null) =>
-    v != null ? (v >= 0 ? '#2ea04388' : '#da363388') : '#30363d88';
+  const signColor = (v: number | null) => {
+    const s = getComputedStyle(document.documentElement);
+    return v != null ? (v >= 0 ? s.getPropertyValue('--positive-bg').trim() : s.getPropertyValue('--negative-bg').trim()) : s.getPropertyValue('--neutral-bg').trim();
+  };
   const fmtPctBar = (v: number) => (v != null ? v.toFixed(1) + '%' : '\u2014');
 
   let cd = $derived($companyData);
@@ -142,7 +144,7 @@
   .km-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
-    color: #484f58;
+    color: var(--text-dim);
     text-transform: uppercase;
   }
 
@@ -157,7 +159,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     text-transform: uppercase;
-    color: #484f58;
+    color: var(--text-dim);
     margin: 0 0 6px 0;
   }
 

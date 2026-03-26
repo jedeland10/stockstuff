@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { Chart, BarElement, CategoryScale, LinearScale, Tooltip, BarController } from 'chart.js';
+  import { cssVar, theme } from '$lib/stores/theme';
 
   Chart.register(BarElement, CategoryScale, LinearScale, Tooltip, BarController);
 
@@ -27,7 +28,13 @@
     if (!canvas) return;
     if (chart) chart.destroy();
 
-    const bgColors = colorFn ? data.map(v => colorFn!(v)) : data.map(() => '#00bcd488');
+    const accent = cssVar('--accent');
+    const elevated = cssVar('--bg-elevated');
+    const border = cssVar('--border');
+    const dim = cssVar('--text-dim');
+    const grid = cssVar('--chart-grid');
+
+    const bgColors = colorFn ? data.map(v => colorFn!(v)) : data.map(() => accent + '88');
 
     chart = new Chart(canvas, {
       type: 'bar',
@@ -36,7 +43,7 @@
         datasets: [{
           data,
           backgroundColor: bgColors,
-          borderColor: bgColors.map(c => c.replace(/88$/, '')),
+          borderColor: bgColors.map(c => c.replace(/88$/, '').replace(/44$/, '')),
           borderWidth: 1,
           borderRadius: 2,
           maxBarThickness: 24,
@@ -49,9 +56,11 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1c2128',
-            borderColor: '#30363d',
+            backgroundColor: elevated,
+            borderColor: border,
             borderWidth: 1,
+            titleColor: cssVar('--text'),
+            bodyColor: cssVar('--text'),
             bodyFont: { family: 'JetBrains Mono', size: 10 },
             callbacks: {
               label: (ctx: any) => formatFn ? formatFn(ctx.parsed.y) : String(ctx.parsed.y)
@@ -61,13 +70,13 @@
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: '#484f58', font: { family: 'JetBrains Mono', size: 8 }, maxRotation: 45 },
-            border: { color: '#30363d' },
+            ticks: { color: dim, font: { family: 'JetBrains Mono', size: 8 }, maxRotation: 45 },
+            border: { color: border },
           },
           y: {
-            grid: { color: '#21262d' },
+            grid: { color: grid },
             ticks: {
-              color: '#484f58',
+              color: dim,
               font: { family: 'JetBrains Mono', size: 8 },
               callback: (v: any) => formatFn ? formatFn(v) : v
             },
@@ -79,7 +88,17 @@
   }
 
   onMount(() => { setTimeout(makeChart, 20); });
-  onDestroy(() => { if (chart) { chart.destroy(); chart = null; } });
+  onDestroy(() => {
+    if (chart) { chart.destroy(); chart = null; }
+    unsub();
+  });
+
+  // Recreate chart when theme changes
+  let mounted = false;
+  const unsub = theme.subscribe(() => {
+    if (mounted && canvas) setTimeout(makeChart, 50);
+  });
+  onMount(() => { mounted = true; });
 </script>
 
 <div class="bar-chart-wrap">
@@ -97,9 +116,9 @@
     overflow: hidden;
   }
   .chart-title {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 9px;
-    color: #484f58;
+    color: var(--text-dim);
     text-transform: uppercase;
     text-align: center;
     margin-bottom: 2px;

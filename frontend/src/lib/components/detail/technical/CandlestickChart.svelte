@@ -2,6 +2,7 @@
   import { onDestroy, tick } from 'svelte';
   import { computeMA } from '$lib/utils/technicals';
   import type { PricePoint } from '$lib/api/types';
+  import { cssVar, theme } from '$lib/stores/theme';
 
   let { data, ticker }: { data: PricePoint[]; ticker: string } = $props();
 
@@ -34,34 +35,42 @@
       if (container.clientWidth < 50) return;
     }
 
+    const bg = cssVar('--bg');
+    const textMuted = cssVar('--text-muted');
+    const grid = cssVar('--chart-grid');
+    const border = cssVar('--border');
+    const pos = cssVar('--positive');
+    const neg = cssVar('--negative');
+    const volume = cssVar('--chart-volume');
+
     chart = LW.createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
       watermark: { visible: false },
       layout: {
-        background: { type: 'solid', color: '#0d1117' },
-        textColor: '#8b949e',
+        background: { type: 'solid', color: bg },
+        textColor: textMuted,
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 10,
       },
-      grid: { vertLines: { color: '#21262d' }, horzLines: { color: '#21262d' } },
+      grid: { vertLines: { color: grid }, horzLines: { color: grid } },
       crosshair: { mode: LW.CrosshairMode.Normal },
-      rightPriceScale: { borderColor: '#30363d' },
-      timeScale: { borderColor: '#30363d', timeVisible: false },
+      rightPriceScale: { borderColor: border },
+      timeScale: { borderColor: border, timeVisible: false },
     });
 
     const candles = chart.addCandlestickSeries({
-      upColor: '#2ea043', downColor: '#da3633',
-      borderUpColor: '#2ea043', borderDownColor: '#da3633',
-      wickUpColor: '#2ea04399', wickDownColor: '#da363399',
+      upColor: pos, downColor: neg,
+      borderUpColor: pos, borderDownColor: neg,
+      wickUpColor: pos + '99', wickDownColor: neg + '99',
     });
     candles.setData(data.map(d => ({ time: d.date, open: d.open!, high: d.high!, low: d.low!, close: d.close! })));
 
-    const vol = chart.addHistogramSeries({ color: '#30363d', priceFormat: { type: 'volume' }, priceScaleId: '' });
+    const vol = chart.addHistogramSeries({ color: volume, priceFormat: { type: 'volume' }, priceScaleId: '' });
     vol.priceScale().applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
     vol.setData(data.map(d => ({
       time: d.date, value: d.volume ?? 0,
-      color: (d.close ?? 0) >= (d.open ?? 0) ? '#2ea04333' : '#da363333',
+      color: (d.close ?? 0) >= (d.open ?? 0) ? pos + '33' : neg + '33',
     })));
 
     const closes = data.map(d => d.close ?? 0);
@@ -90,6 +99,7 @@
   $effect(() => {
     const _ = data;
     const __ = ticker;
+    const ___ = $theme;
     if (data.length && container) {
       createAndApply();
     }

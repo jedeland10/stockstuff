@@ -42,7 +42,13 @@
     return { sorted, labels, growthData };
   });
 
-  const signColor = (v: number | null) => v != null ? (v >= 0 ? '#2ea04388' : '#da363388') : '#30363d88';
+  const signColor = (v: number | null) => {
+    const s = getComputedStyle(document.documentElement);
+    const pos = s.getPropertyValue('--positive-bg').trim();
+    const neg = s.getPropertyValue('--negative-bg').trim();
+    const neu = s.getPropertyValue('--neutral-bg').trim();
+    return v != null ? (v >= 0 ? pos : neg) : neu;
+  };
   const fmtPctFn = (v: number) => v != null ? v.toFixed(1) + '%' : '\u2014';
   const fmtEps = (v: number) => v != null ? v.toFixed(2) : '\u2014';
   const fmtLargeFn = (v: number) => fmtLarge(v);

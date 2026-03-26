@@ -3,6 +3,7 @@
   import { getSectors } from '$lib/api/client';
   import { watchlist } from '$lib/stores/watchlist';
   import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
+  import { theme } from '$lib/stores/theme';
 
   let { total, onFilter, watchlistActive, onToggleWatchlist }: {
     total: number;
@@ -159,6 +160,19 @@
     <input type="text" placeholder="Search stocks..." bind:value={search} oninput={onSearch}
       onfocus={() => searchFocused = true} onblur={() => searchFocused = false} />
   </div>
+
+  <button class="theme-btn" onclick={() => theme.toggle()} title={$theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+    {#if $theme === 'dark'}
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.3">
+        <circle cx="8" cy="8" r="3.5"/>
+        <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>
+      </svg>
+    {:else}
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.3">
+        <path d="M13.5 9.2A5.5 5.5 0 016.8 2.5 6 6 0 1013.5 9.2z"/>
+      </svg>
+    {/if}
+  </button>
 
   <span class="count">{total} stocks</span>
 </div>
@@ -442,6 +456,25 @@
     outline: none;
   }
   .search-box input::placeholder { color: var(--text-dim); }
+
+  .theme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .theme-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
 
   .count {
     font-family: var(--font-mono);
