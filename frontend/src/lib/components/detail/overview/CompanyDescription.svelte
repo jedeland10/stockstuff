@@ -13,7 +13,7 @@
     </svg>
   </button>
   {#if expanded}
-    <p class="desc-text">{$companyData.description}</p>
+    <div class="desc-text">{$companyData.description}</div>
   {/if}
 </div>
 {/if}
@@ -47,9 +47,13 @@
   }
   .chevron.rotated { transform: rotate(180deg); }
   .desc-text {
+    display: block;
     padding: 0 16px 14px;
     font-size: 12px;
     color: var(--text-muted);
     line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 </style>

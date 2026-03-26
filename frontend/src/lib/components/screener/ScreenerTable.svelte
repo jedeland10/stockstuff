@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { StockRow } from '$lib/api/types';
   import { fmtLarge } from '$lib/utils/format';
+  import { watchlist } from '$lib/stores/watchlist';
+  import { visibleColumns, type ColumnKey } from '$lib/stores/columns';
 
   let { stocks, onSelect, selectedTicker, onLoadMore, onSort, loading, hasMore }: {
     stocks: StockRow[];
@@ -11,6 +13,11 @@
     loading: boolean;
     hasMore: boolean;
   } = $props();
+
+  function toggleStar(e: MouseEvent, ticker: string) {
+    e.stopPropagation();
+    watchlist.toggle(ticker);
+  }
 
   let sortBy = $state('market_cap');
   let sortDir = $state<'asc' | 'desc'>('desc');
@@ -36,23 +43,58 @@
 
   const FLAG: Record<string, string> = { SE: '\u{1F1F8}\u{1F1EA}', DK: '\u{1F1E9}\u{1F1F0}', FI: '\u{1F1EB}\u{1F1EE}', NO: '\u{1F1F3}\u{1F1F4}' };
 
-  const cols = [
-    { key: 'name', label: 'Name', width: '160px', align: 'left' },
-    { key: 'ticker', label: 'Ticker', width: '95px', align: 'left' },
-    { key: 'change_pct', label: '1d', width: '58px', align: 'right' },
-    { key: 'perf_1y', label: '1y', width: '58px', align: 'right' },
-    { key: 'div_yield', label: 'Div', width: '48px', align: 'right' },
-    { key: 'pe', label: 'P/E', width: '52px', align: 'right' },
-    { key: 'ps', label: 'P/S', width: '48px', align: 'right' },
-    { key: 'pb', label: 'P/B', width: '48px', align: 'right' },
-    { key: 'price', label: 'Price', width: '62px', align: 'right' },
-    { key: 'report_quarter', label: 'Rep', width: '68px', align: 'left' },
-    { key: 'sector', label: 'Sector', width: '120px', align: 'left' },
-    { key: 'ev_ebitda', label: 'EV/EB', width: '52px', align: 'right' },
-    { key: 'roe', label: 'ROE', width: '48px', align: 'right' },
-    { key: 'margin', label: 'Mrgn', width: '52px', align: 'right' },
-    { key: 'market_cap', label: 'MCap', width: '68px', align: 'right' },
+  type ColDef = {
+    key: ColumnKey;
+    label: string;
+    width: string;
+    align: 'left' | 'right';
+    render: (stock: StockRow) => string;
+    cellClass?: (stock: StockRow) => string;
+  };
+
+  const pctClass = (v: number | null) => (v ?? 0) >= 0 ? 'num text-positive' : 'num text-negative';
+  const fmtPct = (v: number | null, decimals = 1) => v != null ? (v >= 0 ? '+' : '') + v.toFixed(decimals) + '%' : '\u2014';
+
+  const allCols: ColDef[] = [
+    { key: 'name', label: 'Name', width: '160px', align: 'left',
+      render: () => '', cellClass: () => 'name-cell-wrap' }, // special rendering
+    { key: 'ticker', label: 'Ticker', width: '95px', align: 'left',
+      render: (s) => s.ticker, cellClass: () => 'ticker-cell' },
+    { key: 'change_pct', label: '1d', width: '58px', align: 'right',
+      render: (s) => fmtPct(s.change_pct), cellClass: (s) => pctClass(s.change_pct) },
+    { key: 'perf_1y', label: '1y', width: '58px', align: 'right',
+      render: (s) => fmtPct(s.perf_1y), cellClass: (s) => pctClass(s.perf_1y) },
+    { key: 'div_yield', label: 'Div', width: '48px', align: 'right',
+      render: (s) => s.div_yield != null ? s.div_yield.toFixed(1) : '\u2014', cellClass: () => 'num' },
+    { key: 'pe', label: 'P/E', width: '52px', align: 'right',
+      render: (s) => s.pe != null ? s.pe.toFixed(1) : '\u2014', cellClass: () => 'num' },
+    { key: 'ps', label: 'P/S', width: '48px', align: 'right',
+      render: (s) => s.ps != null ? s.ps.toFixed(1) : '\u2014', cellClass: () => 'num' },
+    { key: 'pb', label: 'P/B', width: '48px', align: 'right',
+      render: (s) => s.pb != null ? s.pb.toFixed(1) : '\u2014', cellClass: () => 'num' },
+    { key: 'price', label: 'Price', width: '62px', align: 'right',
+      render: (s) => s.price != null ? s.price.toFixed(2) : '\u2014', cellClass: () => 'num' },
+    { key: 'report_quarter', label: 'Rep', width: '68px', align: 'left',
+      render: (s) => s.report_quarter ?? '\u2014', cellClass: () => 'dim' },
+    { key: 'sector', label: 'Sector', width: '120px', align: 'left',
+      render: (s) => s.sector ?? '\u2014', cellClass: () => 'truncate' },
+    { key: 'ev_ebitda', label: 'EV/EB', width: '52px', align: 'right',
+      render: (s) => s.ev_ebitda != null ? s.ev_ebitda.toFixed(1) : '\u2014', cellClass: () => 'num' },
+    { key: 'roe', label: 'ROE', width: '48px', align: 'right',
+      render: (s) => s.roe != null ? s.roe.toFixed(0) + '%' : '\u2014', cellClass: () => 'num' },
+    { key: 'margin', label: 'Mrgn', width: '52px', align: 'right',
+      render: (s) => s.margin != null ? s.margin.toFixed(0) + '%' : '\u2014', cellClass: () => 'num' },
+    { key: 'market_cap', label: 'MCap', width: '68px', align: 'right',
+      render: (s) => fmtLarge(s.market_cap), cellClass: () => 'num' },
   ];
+
+  // Build a map for O(1) lookup
+  const colMap = new Map(allCols.map(c => [c.key, c]));
+
+  // Derive visible columns in order, preserving the allCols order
+  let cols = $derived(
+    allCols.filter(c => $visibleColumns.includes(c.key))
+  );
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -60,7 +102,8 @@
   <table>
     <thead>
       <tr>
-        {#each cols as col}
+        <th class="star-col" style="width:28px"></th>
+        {#each cols as col (col.key)}
           <th style="width:{col.width};text-align:{col.align}" onclick={() => toggleSort(col.key)}
               class:sorted={sortBy === col.key}>
             {col.label}
@@ -72,28 +115,23 @@
     <tbody>
       {#each stocks as stock (stock.ticker)}
         <tr class:selected={selectedTicker === stock.ticker} onclick={() => onSelect(stock.ticker)}>
-          <td class="name-cell">
-            <span class="flag">{FLAG[stock.country ?? ''] ?? ''}</span>
-            <span class="name-text">{stock.name ?? ''}</span>
+          <td class="star-cell">
+            <button class="star-btn" class:starred={$watchlist.has(stock.ticker)} onclick={(e) => toggleStar(e, stock.ticker)} aria-label="Toggle watchlist">
+              <svg viewBox="0 0 16 16" width="13" height="13" fill={$watchlist.has(stock.ticker) ? 'var(--gold)' : 'none'} stroke={$watchlist.has(stock.ticker) ? 'var(--gold)' : 'currentColor'} stroke-width="1.3">
+                <path d="M8 1.5l2 4.1 4.5.6-3.3 3.2.8 4.5L8 11.6l-4 2.3.8-4.5L1.5 6.2 6 5.6z"/>
+              </svg>
+            </button>
           </td>
-          <td class="ticker-cell">{stock.ticker}</td>
-          <td class="num" class:text-positive={(stock.change_pct ?? 0) >= 0} class:text-negative={(stock.change_pct ?? 0) < 0}>
-            {stock.change_pct != null ? (stock.change_pct >= 0 ? '+' : '') + stock.change_pct.toFixed(1) + '%' : '\u2014'}
-          </td>
-          <td class="num" class:text-positive={(stock.perf_1y ?? 0) >= 0} class:text-negative={(stock.perf_1y ?? 0) < 0}>
-            {stock.perf_1y != null ? (stock.perf_1y >= 0 ? '+' : '') + stock.perf_1y.toFixed(1) + '%' : '\u2014'}
-          </td>
-          <td class="num">{stock.div_yield != null ? stock.div_yield.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.pe != null ? stock.pe.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.ps != null ? stock.ps.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.pb != null ? stock.pb.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.price != null ? stock.price.toFixed(2) : '\u2014'}</td>
-          <td class="dim">{stock.report_quarter ?? '\u2014'}</td>
-          <td class="truncate">{stock.sector ?? '\u2014'}</td>
-          <td class="num">{stock.ev_ebitda != null ? stock.ev_ebitda.toFixed(1) : '\u2014'}</td>
-          <td class="num">{stock.roe != null ? stock.roe.toFixed(0) + '%' : '\u2014'}</td>
-          <td class="num">{stock.margin != null ? stock.margin.toFixed(0) + '%' : '\u2014'}</td>
-          <td class="num">{fmtLarge(stock.market_cap)}</td>
+          {#each cols as col (col.key)}
+            {#if col.key === 'name'}
+              <td class="name-cell">
+                <span class="flag">{FLAG[stock.country ?? ''] ?? ''}</span>
+                <span class="name-text">{stock.name ?? ''}</span>
+              </td>
+            {:else}
+              <td class={col.cellClass?.(stock) ?? ''} style="text-align:{col.align}">{col.render(stock)}</td>
+            {/if}
+          {/each}
         </tr>
       {/each}
     </tbody>
@@ -145,13 +183,33 @@
   }
   tbody tr.selected td:first-child { padding-left: 4px; }
 
+  .star-col { cursor: default !important; }
+  .star-cell { text-align: center; padding: 0 2px !important; }
+  .star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s;
+    opacity: 0.3;
+  }
+  .star-btn:hover { opacity: 1; color: var(--gold); }
+  .star-btn.starred { opacity: 1; }
+  tbody tr:hover .star-btn { opacity: 0.7; }
+  tbody tr:hover .star-btn.starred, .star-btn.starred { opacity: 1; }
+
   .name-cell { display: flex; align-items: center; gap: 4px; max-width: 160px; overflow: hidden; }
   .flag { font-size: 10px; flex-shrink: 0; }
   .name-text { overflow: hidden; text-overflow: ellipsis; }
-  .ticker-cell { color: var(--accent); font-weight: 600; }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .dim { color: var(--text-dim); }
-  .truncate { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+  :global(.ticker-cell) { color: var(--accent); font-weight: 600; }
+  :global(.num) { text-align: right; font-variant-numeric: tabular-nums; }
+  :global(.dim) { color: var(--text-dim); }
+  :global(.truncate) { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
   .load-more {
     text-align: center; padding: 16px; color: var(--text-dim);

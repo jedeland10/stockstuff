@@ -1,8 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { getSectors } from '$lib/api/client';
+  import { watchlist } from '$lib/stores/watchlist';
+  import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
 
-  let { total, onFilter }: { total: number; onFilter: (f: { country: string|null; sector: string; search: string }) => void } = $props();
+  let { total, onFilter, watchlistActive, onToggleWatchlist }: {
+    total: number;
+    onFilter: (f: { country: string|null; sector: string; search: string }) => void;
+    watchlistActive: boolean;
+    onToggleWatchlist: () => void;
+  } = $props();
 
   let country = $state<string | null>(null);
   let sector = $state('');
@@ -10,8 +17,12 @@
   let sectors = $state<string[]>([]);
   let searchTimeout: ReturnType<typeof setTimeout>;
   let searchFocused = $state(false);
+  let columnsOpen = $state(false);
+  let columnsBtn: HTMLButtonElement;
 
-  onMount(async () => { sectors = await getSectors(); });
+  onMount(async () => {
+    sectors = await getSectors();
+  });
 
   function emit() { onFilter({ country, sector, search }); }
   function setCountry(c: string | null) { country = c; emit(); }
@@ -19,6 +30,31 @@
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(emit, 300);
   }
+
+  function handleClickOutside(e: MouseEvent) {
+    if (columnsOpen && columnsBtn && !columnsBtn.contains(e.target as Node)) {
+      const dropdown = document.querySelector('.columns-dropdown');
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        columnsOpen = false;
+      }
+    }
+  }
+
+  $effect(() => {
+    if (columnsOpen) {
+      document.addEventListener('click', handleClickOutside, true);
+      return () => document.removeEventListener('click', handleClickOutside, true);
+    }
+  });
+
+  const groups = $derived.by(() => {
+    const map = new Map<string, typeof ALL_COLUMNS[number][]>();
+    for (const col of ALL_COLUMNS) {
+      if (!map.has(col.group)) map.set(col.group, []);
+      map.get(col.group)!.push(col);
+    }
+    return map;
+  });
 
   const FLAG: Record<string, string> = { SE: '\u{1F1F8}\u{1F1EA}', DK: '\u{1F1E9}\u{1F1F0}', FI: '\u{1F1EB}\u{1F1EE}', NO: '\u{1F1F3}\u{1F1F4}' };
 </script>
@@ -48,6 +84,70 @@
       <option value={s}>{s}</option>
     {/each}
   </select>
+
+  <button class="watchlist-btn" class:active={watchlistActive} onclick={onToggleWatchlist} title="Show watchlist only">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill={watchlistActive ? 'var(--gold)' : 'none'} stroke={watchlistActive ? 'var(--gold)' : 'currentColor'} stroke-width="1.3">
+      <path d="M8 1.5l2 4.1 4.5.6-3.3 3.2.8 4.5L8 11.6l-4 2.3.8-4.5L1.5 6.2 6 5.6z"/>
+    </svg>
+    <span>Watchlist</span>
+    {#if $watchlist.size > 0}
+      <span class="watchlist-count">{$watchlist.size}</span>
+    {/if}
+  </button>
+
+  <div class="columns-wrap">
+    <button class="columns-btn" class:active={columnsOpen} bind:this={columnsBtn}
+      onclick={() => columnsOpen = !columnsOpen} title="Configure columns">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="1.5" y="2" width="4" height="12" rx="1"/>
+        <rect x="6.5" y="2" width="4" height="12" rx="1"/>
+        <rect x="11.5" y="2" width="3" height="12" rx="1"/>
+      </svg>
+      <span>Columns</span>
+    </button>
+
+    {#if columnsOpen}
+      <div class="columns-dropdown">
+        <div class="dropdown-header">
+          <span class="dropdown-title">Visible Columns</span>
+        </div>
+
+        <div class="presets-row">
+          {#each Object.entries(PRESETS) as [key, preset]}
+            <button class="preset-btn" onclick={() => visibleColumns.applyPreset(key)}>{preset.label}</button>
+          {/each}
+        </div>
+
+        <div class="columns-list">
+          {#each groups as [group, groupCols]}
+            <div class="col-group">
+              <span class="group-label">{group}</span>
+              {#each groupCols as col}
+                {@const isLocked = (LOCKED_COLUMNS as readonly string[]).includes(col.key)}
+                <label class="col-item" class:locked={isLocked}>
+                  <input
+                    type="checkbox"
+                    checked={$visibleColumns.includes(col.key)}
+                    disabled={isLocked}
+                    onchange={() => visibleColumns.toggle(col.key)}
+                  />
+                  <span class="col-name">{col.label}</span>
+                  {#if isLocked}
+                    <span class="lock-icon">
+                      <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <rect x="2" y="5" width="8" height="6" rx="1"/>
+                        <path d="M4 5V3.5a2 2 0 014 0V5"/>
+                      </svg>
+                    </span>
+                  {/if}
+                </label>
+              {/each}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+  </div>
 
   <div class="spacer"></div>
 
@@ -131,6 +231,180 @@
     transition: border-color 0.15s;
   }
   .sector-select:hover, .sector-select:focus { border-color: var(--text-dim); color: var(--text); outline: none; }
+
+  .watchlist-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .watchlist-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+  .watchlist-btn.active {
+    border-color: var(--gold);
+    background: rgba(210, 153, 34, 0.08);
+    color: var(--gold);
+  }
+  .watchlist-count {
+    background: var(--bg-hover);
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 10px;
+    line-height: 1.6;
+  }
+  .watchlist-btn.active .watchlist-count {
+    background: rgba(210, 153, 34, 0.15);
+  }
+
+  .columns-wrap {
+    position: relative;
+  }
+  .columns-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .columns-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+  .columns-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .columns-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    width: 260px;
+    animation: dropdown-in 0.15s ease-out;
+  }
+
+  @keyframes dropdown-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dropdown-header {
+    padding: 10px 14px 6px;
+  }
+  .dropdown-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .presets-row {
+    display: flex;
+    gap: 4px;
+    padding: 4px 14px 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .preset-btn {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .columns-list {
+    padding: 8px 0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .col-group {
+    padding: 0 14px;
+  }
+  .col-group + .col-group {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(48, 54, 61, 0.4);
+  }
+  .group-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    padding-left: 2px;
+  }
+  .col-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 4px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .col-item:hover { background: var(--bg-hover); }
+  .col-item.locked {
+    cursor: default;
+    opacity: 0.5;
+  }
+  .col-item input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .col-item.locked input { cursor: default; }
+  .col-name {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+  }
+  .lock-icon {
+    color: var(--text-dim);
+    display: flex;
+  }
 
   .spacer { flex: 1; }
 

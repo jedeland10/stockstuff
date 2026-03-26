@@ -5,6 +5,7 @@
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
   import { getScreener, getCompany, getChart } from '$lib/api/client';
   import { selectedTicker, companyData, chartData, activeTab } from '$lib/stores/screener';
+  import { watchlist } from '$lib/stores/watchlist';
   import type { StockRow } from '$lib/api/types';
 
   let stocks = $state<StockRow[]>([]);
@@ -12,11 +13,19 @@
   let loading = $state(false);
   let hasMore = $state(true);
   let panelWidth = $state(Math.round(window.innerWidth * 2 / 5));
+  let watchlistActive = $state(false);
 
   const PAGE_SIZE = 100;
   let currentFilters = $state<{ country: string|null; sector: string; search: string }>({ country: null, sector: '', search: '' });
   let sortBy = $state('market_cap');
   let sortDir = $state<'asc' | 'desc'>('desc');
+
+  let displayStocks = $derived(
+    watchlistActive ? stocks.filter(s => $watchlist.has(s.ticker)) : stocks
+  );
+  let displayTotal = $derived(
+    watchlistActive ? displayStocks.length : total
+  );
 
   async function loadScreener(filters?: { country: string|null; sector: string; search: string }) {
     if (filters) {
@@ -66,6 +75,28 @@
     chartData.set(chart);
   }
 
+  async function toggleWatchlist() {
+    watchlistActive = !watchlistActive;
+    if (watchlistActive && hasMore) {
+      // Load all remaining stocks so watchlist filter has the full dataset
+      loading = true;
+      while (stocks.length < total) {
+        const data = await getScreener({
+          ...currentFilters,
+          sort_by: sortBy,
+          sort_dir: sortDir,
+          limit: PAGE_SIZE,
+          offset: stocks.length,
+        });
+        stocks = [...stocks, ...data.stocks];
+        total = data.total;
+        if (data.stocks.length === 0) break;
+      }
+      hasMore = false;
+      loading = false;
+    }
+  }
+
   function onResize(e: MouseEvent) {
     e.preventDefault();
     document.body.style.cursor = 'col-resize';
@@ -88,11 +119,11 @@
 </script>
 
 <div class="app">
-  <ScreenerFilters {total} onFilter={loadScreener} />
+  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} />
 
   <div class="main">
     <div class="table-panel">
-      <ScreenerTable {stocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
+      <ScreenerTable stocks={displayStocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
     </div>
 
     {#if $selectedTicker}

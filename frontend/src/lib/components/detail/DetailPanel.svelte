@@ -170,6 +170,7 @@
   }
   .tab-scroll {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
   }

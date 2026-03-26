@@ -1,5 +1,6 @@
 <script lang="ts">
   import { companyData, selectedTicker, activeTab, chartData } from '$lib/stores/screener';
+  import { watchlist } from '$lib/stores/watchlist';
   import { fmt, fmtLarge } from '$lib/utils/format';
 </script>
 
@@ -9,6 +10,15 @@
     <div class="identity">
       <h1 class="name">{$companyData.name}</h1>
       <span class="ticker">{$companyData.ticker}</span>
+      <button class="star-header-btn" onclick={() => watchlist.toggle($companyData!.ticker)}
+        aria-label={$watchlist.has($companyData.ticker) ? 'Remove from watchlist' : 'Add to watchlist'}
+        title={$watchlist.has($companyData.ticker) ? 'Remove from watchlist' : 'Add to watchlist'}>
+        <svg viewBox="0 0 16 16" width="16" height="16"
+          fill={$watchlist.has($companyData.ticker) ? 'var(--gold)' : 'none'}
+          stroke={$watchlist.has($companyData.ticker) ? 'var(--gold)' : 'currentColor'} stroke-width="1.3">
+          <path d="M8 1.5l2 4.1 4.5.6-3.3 3.2.8 4.5L8 11.6l-4 2.3.8-4.5L1.5 6.2 6 5.6z"/>
+        </svg>
+      </button>
     </div>
     <button class="close" onclick={() => { selectedTicker.set(null); companyData.set(null); chartData.set([]); activeTab.set('overview'); }}
       aria-label="Close panel">
@@ -80,6 +90,19 @@
     border-radius: 4px;
     white-space: nowrap;
   }
+
+  .star-header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .star-header-btn:hover { color: var(--gold); transform: scale(1.1); }
 
   .close {
     background: none;
