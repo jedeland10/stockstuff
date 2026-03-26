@@ -3,6 +3,7 @@
   import ScreenerFilters from '$lib/components/screener/ScreenerFilters.svelte';
   import ScreenerTable from '$lib/components/screener/ScreenerTable.svelte';
   import ScoreRanking from '$lib/components/screener/ScoreRanking.svelte';
+  import MarketFeed from '$lib/components/screener/MarketFeed.svelte';
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
   import { getScreener, getCompany, getChart } from '$lib/api/client';
   import { selectedTicker, companyData, chartData, activeTab } from '$lib/stores/screener';
@@ -16,6 +17,12 @@
   let panelWidth = $state(Math.round(window.innerWidth * 2 / 5));
   let watchlistActive = $state(false);
   let rankingsActive = $state(false);
+  let highlightsActive = $state(false);
+
+  type ViewMode = 'screener' | 'rankings' | 'highlights';
+  let viewMode = $derived<ViewMode>(
+    highlightsActive ? 'highlights' : rankingsActive ? 'rankings' : 'screener'
+  );
 
   const PAGE_SIZE = 100;
   let currentFilters = $state<{ country: string|null; sector: string; search: string }>({ country: null, sector: '', search: '' });
@@ -158,6 +165,31 @@
     URL.revokeObjectURL(url);
   }
 
+  async function toggleHighlights() {
+    highlightsActive = !highlightsActive;
+    if (highlightsActive) {
+      rankingsActive = false;
+      // Load all stocks for accurate highlights
+      if (hasMore) {
+        loading = true;
+        while (stocks.length < total) {
+          const data = await getScreener({
+            ...currentFilters,
+            sort_by: sortBy,
+            sort_dir: sortDir,
+            limit: PAGE_SIZE,
+            offset: stocks.length,
+          });
+          stocks = [...stocks, ...data.stocks];
+          total = data.total;
+          if (data.stocks.length === 0) break;
+        }
+        hasMore = false;
+        loading = false;
+      }
+    }
+  }
+
   function onResize(e: MouseEvent) {
     e.preventDefault();
     document.body.style.cursor = 'col-resize';
@@ -180,11 +212,13 @@
 </script>
 
 <div class="app">
-  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={() => rankingsActive = !rankingsActive} />
+  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={() => { rankingsActive = !rankingsActive; if (rankingsActive) highlightsActive = false; }} {highlightsActive} onToggleHighlights={toggleHighlights} />
 
   <div class="main">
     <div class="table-panel">
-      {#if rankingsActive}
+      {#if viewMode === 'highlights'}
+        <MarketFeed stocks={stocks} onSelect={selectStock} />
+      {:else if viewMode === 'rankings'}
         <ScoreRanking onSelect={selectStock} />
       {:else}
         <ScreenerTable stocks={displayStocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />

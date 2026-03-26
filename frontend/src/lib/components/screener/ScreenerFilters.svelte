@@ -5,7 +5,7 @@
   import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
   import { theme } from '$lib/stores/theme';
 
-  let { total, onFilter, watchlistActive, onToggleWatchlist, onExport, rankingsActive, onToggleRankings }: {
+  let { total, onFilter, watchlistActive, onToggleWatchlist, onExport, rankingsActive, onToggleRankings, highlightsActive, onToggleHighlights }: {
     total: number;
     onFilter: (f: { country: string|null; sector: string; search: string }) => void;
     watchlistActive: boolean;
@@ -13,6 +13,8 @@
     onExport: () => void;
     rankingsActive: boolean;
     onToggleRankings: () => void;
+    highlightsActive: boolean;
+    onToggleHighlights: () => void;
   } = $props();
 
   let country = $state<string | null>(null);
@@ -106,6 +108,13 @@
       <rect x="12" y="1" width="3" height="14" rx="0.5"/>
     </svg>
     <span>Rankings</span>
+  </button>
+
+  <button class="highlights-btn" class:active={highlightsActive} onclick={onToggleHighlights} title="Market highlights">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 2L10 6H14L11 9L12 13L8 10.5L4 13L5 9L2 6H6Z"/>
+    </svg>
+    <span>Highlights</span>
   </button>
 
   <div class="columns-wrap">
@@ -322,6 +331,32 @@
     color: var(--text);
   }
   .rankings-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .highlights-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .highlights-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+  .highlights-btn.active {
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-dim);

@@ -99,3 +99,38 @@ async def get_countries():
             "SELECT DISTINCT country FROM stocks WHERE country != '' ORDER BY country"
         )
     return [r["country"] for r in rows]
+
+
+@router.get("/meta/sector-averages")
+async def get_sector_averages():
+    """Return average valuation/quality metrics per sector."""
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT s.sector,
+                   AVG(f.pe) FILTER (WHERE f.pe IS NOT NULL AND f.pe > 0 AND f.pe < 200) AS pe,
+                   AVG(f.pb) FILTER (WHERE f.pb IS NOT NULL AND f.pb > 0) AS pb,
+                   AVG(f.ps) FILTER (WHERE f.ps IS NOT NULL AND f.ps > 0) AS ps,
+                   AVG(f.ev_ebitda) FILTER (WHERE f.ev_ebitda IS NOT NULL AND f.ev_ebitda > 0 AND f.ev_ebitda < 100) AS ev_ebitda,
+                   AVG(f.div_yield) FILTER (WHERE f.div_yield IS NOT NULL) AS div_yield,
+                   AVG(f.roe) FILTER (WHERE f.roe IS NOT NULL AND f.roe > -100 AND f.roe < 200) AS roe,
+                   AVG(f.margin) FILTER (WHERE f.margin IS NOT NULL AND f.margin > -100) AS margin,
+                   AVG(f.eps) FILTER (WHERE f.eps IS NOT NULL) AS eps,
+                   COUNT(*) AS count
+            FROM stocks s
+            JOIN fundamentals f ON s.ticker = f.ticker
+            WHERE s.sector IS NOT NULL AND s.sector != ''
+            GROUP BY s.sector
+            ORDER BY s.sector
+        """)
+    return {r["sector"]: {
+        "pe": round(r["pe"], 1) if r["pe"] else None,
+        "pb": round(r["pb"], 1) if r["pb"] else None,
+        "ps": round(r["ps"], 1) if r["ps"] else None,
+        "ev_ebitda": round(r["ev_ebitda"], 1) if r["ev_ebitda"] else None,
+        "div_yield": round(r["div_yield"], 1) if r["div_yield"] else None,
+        "roe": round(r["roe"], 1) if r["roe"] else None,
+        "margin": round(r["margin"], 1) if r["margin"] else None,
+        "eps": round(r["eps"], 2) if r["eps"] else None,
+        "count": r["count"],
+    } for r in rows}

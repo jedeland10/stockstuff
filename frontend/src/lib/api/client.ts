@@ -81,6 +81,23 @@ export interface FScoreEntry {
 	efficiency: number;
 }
 
+export type SectorAverages = Record<string, {
+	pe: number | null;
+	pb: number | null;
+	ps: number | null;
+	ev_ebitda: number | null;
+	div_yield: number | null;
+	roe: number | null;
+	margin: number | null;
+	eps: number | null;
+	count: number;
+}>;
+
+export async function getSectorAverages(): Promise<SectorAverages> {
+	const res = await fetch(`${BASE}/meta/sector-averages`);
+	return res.json();
+}
+
 export async function getMagicFormulaRanking(limit = 200): Promise<MagicFormulaEntry[]> {
 	const res = await fetch(`${BASE}/scores/magic-formula/ranking?limit=${limit}`);
 	return res.json();
