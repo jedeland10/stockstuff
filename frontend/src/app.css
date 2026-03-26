@@ -73,3 +73,7 @@ a[href*="tradingview.com"] { display: none !important; }
 .text-negative { color: var(--negative); }
 .text-accent { color: var(--accent); }
 .text-muted { color: var(--text-muted); }
+
+@media (max-width: 768px) {
+	html, body { overflow: auto; }
+}

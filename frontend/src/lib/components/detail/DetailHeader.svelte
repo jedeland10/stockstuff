@@ -174,4 +174,12 @@
     color: var(--text-dim);
     margin-right: 4px;
   }
+
+  @media (max-width: 768px) {
+    .header { padding: 12px; }
+    .name { font-size: 14px; }
+    .price { font-size: 18px; }
+    .meta { gap: 4px; }
+    .meta-item { font-size: 10px; padding: 2px 6px; }
+  }
 </style>

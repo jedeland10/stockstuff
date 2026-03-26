@@ -356,4 +356,14 @@
     transition: background 0.15s;
   }
   .resize-handle:hover::after { background: var(--accent); }
+
+  @media (max-width: 768px) {
+    .detail-overlay {
+      width: 100% !important;
+      left: 0;
+      box-shadow: none;
+      border-left: none;
+    }
+    .resize-handle { display: none; }
+  }
 </style>

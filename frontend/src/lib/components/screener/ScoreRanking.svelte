@@ -461,4 +461,18 @@
     font-family: var(--font-mono);
     font-size: 12px;
   }
+
+  @media (max-width: 768px) {
+    .ranking-header { padding: 10px 12px 8px; }
+    .ranking-tabs { flex-wrap: wrap; }
+    .rtab { padding: 6px 12px; font-size: 11px; }
+    .metric-explainers, .metric-explainers.three-col { grid-template-columns: 1fr; }
+    .ranking-desc { font-size: 11px; }
+    td { padding: 6px 6px; font-size: 11px; }
+    th { padding: 6px 6px; }
+    .name-text { max-width: 120px; }
+    .sector-cell { display: none; }
+    th:nth-child(4) { display: none; }
+    .fscore-sort-bar { padding: 6px 12px; flex-wrap: wrap; }
+  }
 </style>

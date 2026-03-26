@@ -263,4 +263,12 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+
+  @media (max-width: 768px) {
+    tbody tr { height: 36px; }
+    td { padding: 6px 5px; font-size: 11px; }
+    th { padding: 8px 5px; }
+    .star-btn { padding: 4px; }
+    .name-cell { max-width: 120px; }
+  }
 </style>

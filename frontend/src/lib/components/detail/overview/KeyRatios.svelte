@@ -104,4 +104,10 @@
     font-weight: 500;
     margin-top: 1px;
   }
+
+  @media (max-width: 768px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .ratios { padding: 10px 12px; }
+    .value { font-size: 14px; }
+  }
 </style>

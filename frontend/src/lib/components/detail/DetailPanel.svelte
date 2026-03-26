@@ -282,4 +282,15 @@
     font-weight: 500;
     color: var(--text-muted);
   }
+
+  @media (max-width: 768px) {
+    .scores-row { flex-direction: column; padding: 8px 12px; }
+    .fin-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(4, 150px);
+      padding: 8px 12px;
+    }
+    .period-bar { padding: 6px 12px; overflow-x: auto; }
+    .period { padding: 4px 8px; font-size: 10px; }
+  }
 </style>

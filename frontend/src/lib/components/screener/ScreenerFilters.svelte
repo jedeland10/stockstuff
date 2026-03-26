@@ -587,4 +587,42 @@
     border-radius: 6px;
     border: 1px solid var(--border);
   }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .filters {
+      flex-wrap: wrap;
+      height: auto;
+      padding: 8px 10px;
+      gap: 6px;
+    }
+    .logo-text { display: none; }
+    .logo-icon { height: 28px; width: 28px; }
+    .divider { display: none; }
+    .country-tabs { order: 2; }
+    .ctab { padding: 4px 8px; font-size: 10px; }
+    .tab-flag { display: none; }
+    .sector-select { order: 3; font-size: 11px; padding: 4px 6px; min-width: 0; max-width: 120px; }
+    .watchlist-btn span,
+    .rankings-btn span,
+    .highlights-btn span,
+    .columns-btn span,
+    .export-btn span { display: none; }
+    .watchlist-btn, .rankings-btn, .highlights-btn, .columns-btn, .export-btn {
+      padding: 6px 8px;
+      gap: 0;
+    }
+    .spacer { display: none; }
+    .search-box {
+      order: 10;
+      width: 100%;
+      flex-basis: 100%;
+    }
+    .search-box.focused { width: 100%; }
+    .count { display: none; }
+    .columns-dropdown {
+      left: auto;
+      right: 0;
+    }
+  }
 </style>

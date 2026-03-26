@@ -272,4 +272,11 @@
     font-weight: 600;
     text-align: right;
   }
+
+  @media (max-width: 768px) {
+    .feed-grid { grid-template-columns: 1fr; }
+    .feed-scroll { padding: 10px 12px; }
+    .feed-header { padding: 12px; }
+    .mover-row { font-size: 11px; }
+  }
 </style>

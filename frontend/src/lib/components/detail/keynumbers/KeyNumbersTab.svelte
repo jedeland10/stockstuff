@@ -176,4 +176,11 @@
     grid-auto-rows: 150px;
     gap: 6px;
   }
+
+  @media (max-width: 768px) {
+    .grid-3x2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2x2 { grid-template-columns: 1fr; }
+    .metrics-row { flex-wrap: wrap; }
+    .km { padding: 4px 8px; }
+  }
 </style>
