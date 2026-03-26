@@ -101,6 +101,15 @@ async def get_countries():
     return [r["country"] for r in rows]
 
 
+@router.get("/meta/last-updated")
+async def get_last_updated():
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT MAX(updated_at) AS last_updated FROM fundamentals")
+    ts = row["last_updated"] if row else None
+    return {"last_updated": ts.isoformat() if ts else None}
+
+
 @router.get("/meta/sector-averages")
 async def get_sector_averages():
     """Return average valuation/quality metrics per sector."""

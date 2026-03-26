@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getSectors } from '$lib/api/client';
+  import { getSectors, getLastUpdated } from '$lib/api/client';
   import { watchlist } from '$lib/stores/watchlist';
   import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
   import { theme } from '$lib/stores/theme';
@@ -25,9 +25,25 @@
   let searchFocused = $state(false);
   let columnsOpen = $state(false);
   let columnsBtn: HTMLButtonElement;
+  let lastUpdated = $state<string | null>(null);
+
+  function timeAgo(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
+
+  let updatedLabel = $derived(lastUpdated ? timeAgo(lastUpdated) : null);
 
   onMount(async () => {
-    sectors = await getSectors();
+    const [s, lu] = await Promise.all([getSectors(), getLastUpdated()]);
+    sectors = s;
+    lastUpdated = lu;
   });
 
   function emit() { onFilter({ country, sector, search }); }
@@ -202,7 +218,14 @@
     {/if}
   </button>
 
-  <span class="count">{total} stocks</span>
+  <span class="count">
+    {total} stocks
+    {#if updatedLabel}
+      <span class="updated-dot" title={lastUpdated ? new Date(lastUpdated).toLocaleString() : ''}>
+        · {updatedLabel}
+      </span>
+    {/if}
+  </span>
 </div>
 
 <style>
@@ -586,6 +609,11 @@
     padding: 4px 8px;
     border-radius: 6px;
     border: 1px solid var(--border);
+  }
+
+  .updated-dot {
+    color: var(--text-dim);
+    opacity: 0.7;
   }
 
   /* Mobile responsive */

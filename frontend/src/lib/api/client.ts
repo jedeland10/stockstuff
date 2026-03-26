@@ -93,6 +93,12 @@ export type SectorAverages = Record<string, {
 	count: number;
 }>;
 
+export async function getLastUpdated(): Promise<string | null> {
+	const res = await fetch(`${BASE}/meta/last-updated`);
+	const data = await res.json();
+	return data.last_updated;
+}
+
 export async function getSectorAverages(): Promise<SectorAverages> {
 	const res = await fetch(`${BASE}/meta/sector-averages`);
 	return res.json();

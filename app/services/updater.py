@@ -101,21 +101,25 @@ async def refresh_prices():
 
 def start_scheduler():
     tz = "Europe/Stockholm"
+    # Fundamentals: every 3 hours during market-relevant hours (9-21)
     scheduler.add_job(
         refresh_fundamentals,
         "cron",
-        hour=18, minute=0,
+        hour="9,12,15,18",
+        minute=0,
         timezone=tz,
         id="refresh_fundamentals",
         replace_existing=True,
     )
+    # Prices: during market hours + after close
     scheduler.add_job(
         refresh_prices,
         "cron",
-        hour=18, minute=0,
+        hour="9,12,15,18",
+        minute=5,
         timezone=tz,
         id="refresh_prices",
         replace_existing=True,
     )
     scheduler.start()
-    logger.info("Scheduler started — fundamentals + prices daily at 18:00 (Europe/Stockholm)")
+    logger.info("Scheduler started — fundamentals + prices at 09/12/15/18 (Europe/Stockholm)")
