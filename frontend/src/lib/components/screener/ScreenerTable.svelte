@@ -134,10 +134,25 @@
           {/each}
         </tr>
       {/each}
+      {#if loading && stocks.length === 0}
+        {#each Array(20) as _}
+          <tr class="skeleton-row">
+            <td></td>
+            {#each cols as col (col.key)}
+              <td>
+                <div class="skeleton" style="width:{col.key === 'name' ? '80%' : col.key === 'sector' ? '70%' : '60%'}"></div>
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      {/if}
     </tbody>
   </table>
-  {#if loading}
-    <div class="load-more">Loading...</div>
+  {#if loading && stocks.length > 0}
+    <div class="load-more">
+      <div class="load-spinner"></div>
+      Loading more...
+    </div>
   {/if}
 </div>
 
@@ -211,8 +226,41 @@
   :global(.dim) { color: var(--text-dim); }
   :global(.truncate) { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
+  .skeleton-row {
+    pointer-events: none;
+  }
+  .skeleton {
+    height: 10px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-elevated) 50%, var(--bg-hover) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
   .load-more {
-    text-align: center; padding: 16px; color: var(--text-dim);
-    font-family: var(--font-mono); font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .load-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>

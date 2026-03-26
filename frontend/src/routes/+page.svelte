@@ -14,7 +14,14 @@
   let total = $state(0);
   let loading = $state(false);
   let hasMore = $state(true);
-  let panelWidth = $state(Math.round(window.innerWidth * 2 / 5));
+  const PANEL_WIDTH_KEY = 'stonklens-panel-width';
+  let panelWidth = $state((() => {
+    try {
+      const stored = localStorage.getItem(PANEL_WIDTH_KEY);
+      if (stored) return Math.max(400, Math.min(Number(stored), window.innerWidth - 100));
+    } catch {}
+    return Math.round(window.innerWidth * 2 / 5);
+  })());
   let watchlistActive = $state(false);
   let rankingsActive = $state(false);
   let highlightsActive = $state(false);
@@ -203,6 +210,7 @@
       document.body.style.userSelect = '';
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      localStorage.setItem(PANEL_WIDTH_KEY, String(panelWidth));
     }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
