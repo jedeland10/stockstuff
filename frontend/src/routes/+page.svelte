@@ -97,6 +97,65 @@
     }
   }
 
+  async function exportCsv() {
+    // Load all stocks before exporting
+    if (hasMore) {
+      loading = true;
+      while (stocks.length < total) {
+        const data = await getScreener({
+          ...currentFilters,
+          sort_by: sortBy,
+          sort_dir: sortDir,
+          limit: PAGE_SIZE,
+          offset: stocks.length,
+        });
+        stocks = [...stocks, ...data.stocks];
+        total = data.total;
+        if (data.stocks.length === 0) break;
+      }
+      hasMore = false;
+      loading = false;
+    }
+
+    const toExport = watchlistActive ? stocks.filter(s => $watchlist.has(s.ticker)) : stocks;
+    const fields: { key: keyof StockRow; label: string }[] = [
+      { key: 'name', label: 'Name' },
+      { key: 'ticker', label: 'Ticker' },
+      { key: 'country', label: 'Country' },
+      { key: 'sector', label: 'Sector' },
+      { key: 'industry', label: 'Industry' },
+      { key: 'price', label: 'Price' },
+      { key: 'change_pct', label: '1d Change' },
+      { key: 'perf_1y', label: '1y Change' },
+      { key: 'market_cap', label: 'Market Cap' },
+      { key: 'pe', label: 'P/E' },
+      { key: 'pb', label: 'P/B' },
+      { key: 'ps', label: 'P/S' },
+      { key: 'ev_ebitda', label: 'EV/EBITDA' },
+      { key: 'div_yield', label: 'Div Yield' },
+      { key: 'roe', label: 'ROE' },
+      { key: 'margin', label: 'Margin' },
+      { key: 'report_quarter', label: 'Report Quarter' },
+    ];
+    const header = fields.map(f => f.label).join(',');
+    const rows = toExport.map(stock => {
+      return fields.map(f => {
+        const val = stock[f.key];
+        if (val == null) return '';
+        if (typeof val === 'string' && val.includes(',')) return `"${val}"`;
+        return String(val);
+      }).join(',');
+    });
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stonklens-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function onResize(e: MouseEvent) {
     e.preventDefault();
     document.body.style.cursor = 'col-resize';
@@ -119,7 +178,7 @@
 </script>
 
 <div class="app">
-  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} />
+  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} />
 
   <div class="main">
     <div class="table-panel">

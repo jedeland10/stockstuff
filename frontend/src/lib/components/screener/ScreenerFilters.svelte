@@ -5,11 +5,12 @@
   import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
   import { theme } from '$lib/stores/theme';
 
-  let { total, onFilter, watchlistActive, onToggleWatchlist }: {
+  let { total, onFilter, watchlistActive, onToggleWatchlist, onExport }: {
     total: number;
     onFilter: (f: { country: string|null; sector: string; search: string }) => void;
     watchlistActive: boolean;
     onToggleWatchlist: () => void;
+    onExport: () => void;
   } = $props();
 
   let country = $state<string | null>(null);
@@ -160,6 +161,13 @@
     <input type="text" placeholder="Search stocks..." bind:value={search} oninput={onSearch}
       onfocus={() => searchFocused = true} onblur={() => searchFocused = false} />
   </div>
+
+  <button class="export-btn" onclick={onExport} title="Export to CSV">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 2v8M5 7l3 3 3-3M3 12h10"/>
+    </svg>
+    <span>CSV</span>
+  </button>
 
   <button class="theme-btn" onclick={() => theme.toggle()} title={$theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
     {#if $theme === 'dark'}
@@ -456,6 +464,27 @@
     outline: none;
   }
   .search-box input::placeholder { color: var(--text-dim); }
+
+  .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .export-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
 
   .theme-btn {
     display: flex;
