@@ -78,10 +78,12 @@
     await loadScreener(currentFilters);
   }
 
-  async function selectStock(ticker: string) {
+  async function selectStock(ticker: string, pushState = true) {
     if ($selectedTicker === ticker) return;
     selectedTicker.set(ticker);
     activeTab.set('overview');
+
+    if (pushState) updateUrl({ stock: ticker });
 
     const [cd, chart] = await Promise.all([
       getCompany(ticker),
@@ -172,6 +174,12 @@
     URL.revokeObjectURL(url);
   }
 
+  function toggleRankings() {
+    rankingsActive = !rankingsActive;
+    if (rankingsActive) highlightsActive = false;
+    updateUrl({ view: rankingsActive ? 'rankings' : null });
+  }
+
   async function toggleHighlights() {
     highlightsActive = !highlightsActive;
     if (highlightsActive) {
@@ -195,6 +203,7 @@
         loading = false;
       }
     }
+    updateUrl({ view: highlightsActive ? 'highlights' : null });
   }
 
   function onResize(e: MouseEvent) {
@@ -216,11 +225,71 @@
     document.addEventListener('mouseup', onUp);
   }
 
-  onMount(() => { loadScreener(currentFilters); });
+  // URL sync
+  function updateUrl(params: { stock?: string | null; view?: string | null }) {
+    const url = new URL(window.location.href);
+    if ('stock' in params) {
+      if (params.stock) url.searchParams.set('stock', params.stock);
+      else url.searchParams.delete('stock');
+    }
+    if ('view' in params) {
+      if (params.view) url.searchParams.set('view', params.view);
+      else url.searchParams.delete('view');
+    }
+    history.pushState({}, '', url.toString());
+  }
+
+  function readUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      stock: params.get('stock'),
+      view: params.get('view'),
+    };
+  }
+
+  // Clear URL stock param when panel is closed
+  $effect(() => {
+    if ($selectedTicker === null && mounted) {
+      updateUrl({ stock: null });
+    }
+  });
+
+  let mounted = false;
+
+  onMount(() => {
+    mounted = true;
+    const { stock, view } = readUrl();
+
+    // Restore view mode from URL
+    if (view === 'rankings') { rankingsActive = true; highlightsActive = false; }
+    else if (view === 'highlights') { highlightsActive = true; rankingsActive = false; }
+
+    loadScreener(currentFilters);
+
+    // Auto-select stock from URL after screener loads
+    if (stock) {
+      selectStock(stock, false);
+    }
+
+    // Handle browser back/forward
+    window.addEventListener('popstate', () => {
+      const { stock: s, view: v } = readUrl();
+      rankingsActive = v === 'rankings';
+      highlightsActive = v === 'highlights';
+      if (s && s !== $selectedTicker) {
+        selectStock(s, false);
+      } else if (!s && $selectedTicker) {
+        selectedTicker.set(null);
+        companyData.set(null);
+        chartData.set([]);
+        activeTab.set('overview');
+      }
+    });
+  });
 </script>
 
 <div class="app">
-  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={() => { rankingsActive = !rankingsActive; if (rankingsActive) highlightsActive = false; }} {highlightsActive} onToggleHighlights={toggleHighlights} />
+  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={toggleRankings} {highlightsActive} onToggleHighlights={toggleHighlights} />
 
   <div class="main">
     <div class="table-panel">
