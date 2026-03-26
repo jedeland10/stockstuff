@@ -47,6 +47,12 @@
     if (filters) {
       currentFilters = filters;
       stocks = [];
+      // Switch back to screener view when filters are applied
+      if (rankingsActive || highlightsActive) {
+        rankingsActive = false;
+        highlightsActive = false;
+        updateUrl({ view: null });
+      }
     }
     loading = true;
     const data = await getScreener({
