@@ -20,11 +20,12 @@
   let techData = $state<PricePoint[]>([]);
   let scores = $state<StockScores | null>(null);
 
-  // Fetch scores when ticker changes
+  // Fetch scores when ticker changes, reset tech data
   $effect(() => {
     const ticker = $selectedTicker;
     if (ticker) {
       getScores(ticker).then(s => scores = s);
+      techData = [];
     } else {
       scores = null;
     }
@@ -56,25 +57,18 @@
   const periods = ['1m', '3m', '6m', '1y', '2y', '5y', '10y', 'max'];
   const techPeriods = ['1m', '3m', '6m', '1y', '2y', '5y'];
 
-  async function setChartPeriod(p: string) {
+  function setChartPeriod(p: string) {
     chartPeriod = p;
-    const ticker = $selectedTicker;
-    if (!ticker) return;
-    const data = await getChart(ticker, p);
-    chartData.set(data);
   }
 
-  async function setTechPeriod(p: string) {
+  function setTechPeriod(p: string) {
     techPeriod = p;
-    const ticker = $selectedTicker;
-    if (!ticker) return;
-    techData = await getChart(ticker, p);
   }
 
-  // Load tech data when switching to technical tab
+  // Load tech data when switching to technical tab (fetch max once)
   $effect(() => {
     if ($activeTab === 'technical' && $selectedTicker && !techData.length) {
-      getChart($selectedTicker, techPeriod).then(d => techData = d);
+      getChart($selectedTicker, 'max').then(d => techData = d);
     }
   });
 </script>
@@ -136,7 +130,7 @@
           <button class="period" class:active={chartPeriod === p} onclick={() => setChartPeriod(p)}>{p}</button>
         {/each}
       </div>
-      <PriceChart data={$chartData} ticker={$selectedTicker ?? ''} />
+      <PriceChart data={$chartData} ticker={$selectedTicker ?? ''} period={chartPeriod} />
       {#if finData}
         <div class="fin-grid">
           <BarChart id="ov-rev" title="Net Sales" labels={finData.labels} data={finData.sorted.map(f => f.revenue)} formatFn={fmtLargeFn} />
@@ -160,7 +154,7 @@
         {/each}
       </div>
       <PerformanceRow />
-      <CandlestickChart data={techData} ticker={$selectedTicker ?? ''} />
+      <CandlestickChart data={techData} ticker={$selectedTicker ?? ''} period={techPeriod} />
       <TechnicalIndicators />
     {/if}
   </div>

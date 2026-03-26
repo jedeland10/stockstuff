@@ -78,7 +78,7 @@
 
     const [cd, chart] = await Promise.all([
       getCompany(ticker),
-      getChart(ticker, '1y'),
+      getChart(ticker, 'max'),
     ]);
     companyData.set(cd);
     chartData.set(chart);

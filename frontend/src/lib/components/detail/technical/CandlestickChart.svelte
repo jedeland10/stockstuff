@@ -4,10 +4,16 @@
   import type { PricePoint } from '$lib/api/types';
   import { cssVar, theme } from '$lib/stores/theme';
 
-  let { data, ticker }: { data: PricePoint[]; ticker: string } = $props();
+  let { data, ticker, period = 'max' }: { data: PricePoint[]; ticker: string; period?: string } = $props();
 
   let container: HTMLDivElement;
   let chart: any = null;
+  let prevTicker = '';
+
+  const PERIOD_DAYS: Record<string, number> = {
+    '1m': 30, '3m': 90, '6m': 180, '1y': 365,
+    '2y': 730, '5y': 1825, '10y': 3650, 'max': 99999,
+  };
   let observer: ResizeObserver | null = null;
   let LW: any = null;
 
@@ -86,7 +92,7 @@
       s.setData(data.map((d, i) => ({ time: d.date, value: ma200[i]! })).filter((d: any) => d.value != null));
     }
 
-    chart.timeScale().fitContent();
+    setVisibleRange();
 
     observer = new ResizeObserver(() => {
       if (chart && container.clientWidth > 0 && container.clientHeight > 0) {
@@ -96,12 +102,40 @@
     observer.observe(container);
   }
 
+  function setVisibleRange() {
+    if (!chart || !data.length) return;
+    const days = PERIOD_DAYS[period] ?? 99999;
+    if (period === 'max' || days >= 99999) {
+      chart.timeScale().fitContent();
+      return;
+    }
+    const lastDate = data[data.length - 1].date;
+    const from = new Date(lastDate);
+    from.setDate(from.getDate() - days);
+    const fromStr = from.toISOString().slice(0, 10);
+    try {
+      chart.timeScale().setVisibleRange({ from: fromStr, to: lastDate });
+    } catch {
+      chart.timeScale().fitContent();
+    }
+  }
+
   $effect(() => {
     const _ = data;
     const __ = ticker;
     const ___ = $theme;
     if (data.length && container) {
-      createAndApply();
+      if (ticker !== prevTicker || !chart) {
+        prevTicker = ticker;
+        createAndApply();
+      }
+    }
+  });
+
+  $effect(() => {
+    const _ = period;
+    if (chart && data.length) {
+      setVisibleRange();
     }
   });
 

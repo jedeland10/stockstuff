@@ -3,7 +3,7 @@
   import type { PricePoint } from '$lib/api/types';
   import { cssVar, theme } from '$lib/stores/theme';
 
-  let { data, ticker }: { data: PricePoint[]; ticker: string } = $props();
+  let { data, ticker, period = 'max' }: { data: PricePoint[]; ticker: string; period?: string } = $props();
 
   let container: HTMLDivElement;
   let chart: any = null;
@@ -11,6 +11,12 @@
   let volumeSeries: any = null;
   let observer: ResizeObserver | null = null;
   let LW: any = null;
+  let prevTicker = '';
+
+  const PERIOD_DAYS: Record<string, number> = {
+    '1m': 30, '3m': 90, '6m': 180, '1y': 365,
+    '2y': 730, '5y': 1825, '10y': 3650, 'max': 99999,
+  };
 
   function destroyChart() {
     observer?.disconnect();
@@ -27,7 +33,6 @@
 
     destroyChart();
 
-    // Wait for paint
     await tick();
     await new Promise(r => requestAnimationFrame(r));
     await new Promise(r => requestAnimationFrame(r));
@@ -35,7 +40,6 @@
     const w = container.clientWidth;
     const h = container.clientHeight;
     if (w < 50 || h < 50) {
-      // Retry once more after a delay
       await new Promise(r => setTimeout(r, 200));
       if (container.clientWidth < 50) return;
     }
@@ -78,6 +82,7 @@
     volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
 
     applyData();
+    setVisibleRange();
 
     observer = new ResizeObserver(() => {
       if (chart && container.clientWidth > 0 && container.clientHeight > 0) {
@@ -94,16 +99,43 @@
       time: d.date, value: d.volume ?? 0,
       color: (d.close ?? 0) >= (d.open ?? 0) ? cssVar('--positive') + '44' : cssVar('--negative') + '44',
     })));
-    chart?.timeScale().fitContent();
+  }
+
+  function setVisibleRange() {
+    if (!chart || !data.length) return;
+    const days = PERIOD_DAYS[period] ?? 99999;
+    if (period === 'max' || days >= 99999) {
+      chart.timeScale().fitContent();
+      return;
+    }
+    const lastDate = data[data.length - 1].date;
+    const from = new Date(lastDate);
+    from.setDate(from.getDate() - days);
+    const fromStr = from.toISOString().slice(0, 10);
+    try {
+      chart.timeScale().setVisibleRange({ from: fromStr, to: lastDate });
+    } catch {
+      chart.timeScale().fitContent();
+    }
   }
 
   $effect(() => {
-    // Trigger on data, ticker, or theme change
     const _ = data;
     const __ = ticker;
     const ___ = $theme;
     if (data.length && container) {
-      createAndApply();
+      if (ticker !== prevTicker || !chart) {
+        prevTicker = ticker;
+        createAndApply();
+      }
+    }
+  });
+
+  // When period changes, just adjust the visible range (no rebuild)
+  $effect(() => {
+    const _ = period;
+    if (chart && data.length) {
+      setVisibleRange();
     }
   });
 
