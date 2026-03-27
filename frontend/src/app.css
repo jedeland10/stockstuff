@@ -1,78 +1,87 @@
-:root,
-:root[data-theme="dark"] {
-	--bg: #0d1117;
-	--bg-surface: #161b22;
-	--bg-elevated: #1c2128;
-	--bg-hover: #21262d;
-	--border: #30363d;
-	--text: #e6edf3;
-	--text-muted: #8b949e;
-	--text-dim: #484f58;
-	--accent: #00bcd4;
-	--accent-dim: #00bcd420;
-	--positive: #3fb950;
-	--negative: #f85149;
-	--gold: #d29922;
-	--chart-grid: #21262d;
-	--chart-volume: #30363d;
-	--positive-bg: #2ea04388;
-	--negative-bg: #da363388;
-	--neutral-bg: #30363d88;
-	--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-	--font-ui: 'Inter', 'DM Sans', system-ui, sans-serif;
-	--radius: 8px;
+@import "tailwindcss";
+
+@layer base {
+	:root,
+	:root[data-theme="dark"] {
+		--bg: #111417;
+		--bg-surface: #191c1f;
+		--bg-elevated: #1d2023;
+		--bg-hover: #272a2e;
+		--border: #323538;
+		--text: #e1e2e7;
+		--text-muted: #8b949e;
+		--text-dim: #484f58;
+		--accent: #00d1ff;
+		--accent-dim: #00d1ff20;
+		--positive: #01f5a0;
+		--negative: #ffb4ab;
+		--gold: #feb127;
+		--chart-grid: #272a2e;
+		--chart-volume: #323538;
+		--positive-bg: #01f5a022;
+		--negative-bg: #ffb4ab22;
+		--neutral-bg: #32353888;
+		--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+		--font-ui: 'Inter', 'DM Sans', system-ui, sans-serif;
+		--font-heading: 'Manrope', system-ui, sans-serif;
+		--radius: 0px;
+		--sidebar-bg: #0b0e11;
+		--topbar-bg: #1c1f23;
+	}
+
+	:root[data-theme="light"] {
+		--bg: #ffffff;
+		--bg-surface: #f6f8fa;
+		--bg-elevated: #eef1f5;
+		--bg-hover: #e8ebef;
+		--border: #d1d9e0;
+		--text: #1f2328;
+		--text-muted: #59636e;
+		--text-dim: #8b949e;
+		--accent: #0891b2;
+		--accent-dim: #0891b218;
+		--positive: #1a7f37;
+		--negative: #cf222e;
+		--gold: #d29922;
+		--chart-grid: #e8ebef;
+		--chart-volume: #d1d9e0;
+		--positive-bg: #1a7f3744;
+		--negative-bg: #cf222e44;
+		--neutral-bg: #d1d9e044;
+		--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+		--font-ui: 'Inter', 'DM Sans', system-ui, sans-serif;
+		--font-heading: 'Manrope', system-ui, sans-serif;
+		--radius: 0px;
+		--sidebar-bg: #f0f2f5;
+		--topbar-bg: #ffffff;
+	}
+
+	html, body {
+		height: 100%;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-ui);
+		font-size: 13px;
+		line-height: 1.4;
+		overflow: hidden;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
 }
 
-:root[data-theme="light"] {
-	--bg: #ffffff;
-	--bg-surface: #f6f8fa;
-	--bg-elevated: #eef1f5;
-	--bg-hover: #e8ebef;
-	--border: #d1d9e0;
-	--text: #1f2328;
-	--text-muted: #59636e;
-	--text-dim: #8b949e;
-	--accent: #0891b2;
-	--accent-dim: #0891b218;
-	--positive: #1a7f37;
-	--negative: #cf222e;
-	--gold: #d29922;
-	--chart-grid: #e8ebef;
-	--chart-volume: #d1d9e0;
-	--positive-bg: #1a7f3744;
-	--negative-bg: #cf222e44;
-	--neutral-bg: #d1d9e044;
-	--font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-	--font-ui: 'Inter', 'DM Sans', system-ui, sans-serif;
-	--radius: 8px;
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-	height: 100%;
-	background: var(--bg);
-	color: var(--text);
-	font-family: var(--font-ui);
-	font-size: 13px;
-	line-height: 1.4;
-	overflow: hidden;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0b0e11; }
+::-webkit-scrollbar-thumb { background: #323538; }
+::-webkit-scrollbar-thumb:hover { background: #00d1ff; }
 
 /* Hide TradingView attribution */
 a[href*="tradingview.com"] { display: none !important; }
 
-.text-positive { color: var(--positive); }
-.text-negative { color: var(--negative); }
-.text-accent { color: var(--accent); }
-.text-muted { color: var(--text-muted); }
+@layer utilities {
+	.text-positive { color: var(--positive); }
+	.text-negative { color: var(--negative); }
+	.text-accent { color: var(--accent); }
+}
 
 @media (max-width: 768px) {
 	html, body { overflow: auto; }

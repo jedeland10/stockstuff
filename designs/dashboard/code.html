@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Market Intelligence Hub | StockLens</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary": "#ceffdf",
+              "on-tertiary": "#442b00",
+              "tertiary": "#ffd59c",
+              "surface-container-high": "#272a2e",
+              "on-secondary-container": "#006b43",
+              "primary-fixed-dim": "#4cd6ff",
+              "primary": "#a4e6ff",
+              "error": "#ffb4ab",
+              "inverse-surface": "#e1e2e7",
+              "secondary-fixed": "#50ffaf",
+              "on-tertiary-fixed-variant": "#624000",
+              "on-background": "#e1e2e7",
+              "surface-container": "#1d2023",
+              "on-primary-container": "#00566a",
+              "tertiary-fixed": "#ffddb1",
+              "inverse-primary": "#00677f",
+              "outline": "#859399",
+              "tertiary-fixed-dim": "#ffba49",
+              "background": "#111417",
+              "surface-variant": "#323538",
+              "error-container": "#93000a",
+              "on-secondary-fixed-variant": "#005232",
+              "tertiary-container": "#feb127",
+              "on-tertiary-fixed": "#291800",
+              "on-error-container": "#ffdad6",
+              "inverse-on-surface": "#2e3134",
+              "surface-bright": "#37393d",
+              "primary-container": "#00d1ff",
+              "surface": "#111417",
+              "secondary-container": "#01f5a0",
+              "on-primary-fixed": "#001f28",
+              "surface-container-lowest": "#0b0e11",
+              "surface-tint": "#4cd6ff",
+              "secondary-fixed-dim": "#00e293",
+              "on-primary-fixed-variant": "#004e60",
+              "primary-fixed": "#b7eaff",
+              "on-tertiary-container": "#6b4700",
+              "on-surface-variant": "#bbc9cf",
+              "on-surface": "#e1e2e7",
+              "on-primary": "#003543",
+              "outline-variant": "#3c494e",
+              "on-error": "#690005",
+              "surface-container-low": "#191c1f",
+              "surface-dim": "#111417",
+              "surface-container-highest": "#323538",
+              "on-secondary-fixed": "#002111",
+              "on-secondary": "#003921"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0b0e11; }
+        ::-webkit-scrollbar-thumb { background: #323538; }
+        .glass-panel {
+            background: rgba(50, 53, 56, 0.4);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary/30">
+<!-- SideNavBar (Predicted Component) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-8 z-[60] bg-[#0b0e11] w-64 border-r border-outline-variant/15">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed font-bold">query_stats</span>
+</div>
+<h1 class="text-lg font-black text-[#00d1ff] font-headline uppercase tracking-tighter">StockLens</h1>
+</div>
+<div class="mt-4">
+<p class="font-headline font-bold text-on-surface text-sm">Command Center</p>
+<p class="text-[0.6875rem] font-mono tracking-wider uppercase text-slate-500">High-Velocity Intel</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col">
+<!-- Dashboard (Active) -->
+<a class="flex items-center gap-3 bg-transparent text-[#00d1ff] border-l-4 border-[#00d1ff] py-3 px-6 font-bold transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-sm font-inter tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 py-3 px-6 hover:text-slate-200 hover:bg-[#1c1f23] transition-all duration-200" href="#">
+<span class="material-symbols-outlined">language</span>
+<span class="text-sm font-inter tracking-tight">Markets</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 py-3 px-6 hover:text-slate-200 hover:bg-[#1c1f23] transition-all duration-200" href="#">
+<span class="material-symbols-outlined">filter_list</span>
+<span class="text-sm font-inter tracking-tight">Screener</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 py-3 px-6 hover:text-slate-200 hover:bg-[#1c1f23] transition-all duration-200" href="#">
+<span class="material-symbols-outlined">visibility</span>
+<span class="text-sm font-inter tracking-tight">Watchlist</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 py-3 px-6 hover:text-slate-200 hover:bg-[#1c1f23] transition-all duration-200" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="text-sm font-inter tracking-tight">Alerts</span>
+</a>
+<div class="mt-8 px-6">
+<button class="w-full py-2 px-4 bg-surface-container-highest text-primary text-[0.6875rem] font-mono font-bold uppercase tracking-widest hover:bg-primary-container hover:text-on-primary-fixed transition-colors">
+                    Add Workspace
+                </button>
+</div>
+</nav>
+<div class="mt-auto px-6 border-t border-outline-variant/10 pt-6">
+<a class="flex items-center gap-3 text-slate-500 py-2 hover:text-slate-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">help</span>
+<span class="text-sm font-inter">Support</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 py-2 hover:text-slate-200 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">code</span>
+<span class="text-sm font-inter">API</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar (Predicted Component Integration) -->
+<header class="flex justify-between items-center w-full px-8 h-16 z-50 bg-[#1c1f23] sticky top-0">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4">
+<span class="text-[0.6875rem] font-mono tracking-wider uppercase text-slate-400">Search Assets</span>
+<div class="bg-surface-container-lowest px-4 py-1.5 flex items-center gap-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-sm text-primary">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-48 font-mono placeholder:text-slate-600" placeholder="TICKER, ISIN, SECTOR..." type="text"/>
+</div>
+</div>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-[#a4e6ff] border-b-2 border-[#00d1ff] pb-1 text-[0.6875rem] font-mono tracking-wider uppercase" href="#">Global Ticker</a>
+<a class="text-slate-400 font-medium text-[0.6875rem] font-mono tracking-wider uppercase hover:text-[#00d1ff] transition-colors" href="#">Indices</a>
+<a class="text-slate-400 font-medium text-[0.6875rem] font-mono tracking-wider uppercase hover:text-[#00d1ff] transition-colors" href="#">Crypto</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">settings</span></button>
+</div>
+<div class="flex items-center gap-3 border-l border-outline-variant/20 pl-6">
+<div class="text-right">
+<p class="text-[0.6875rem] font-mono font-bold">ANALYST_042</p>
+<p class="text-[0.5rem] text-secondary tracking-[0.2em] font-mono">PRO ACCOUNT</p>
+</div>
+<img alt="User Analyst Profile" class="w-8 h-8 object-cover border border-primary/30" data-alt="professional portrait of a male stock analyst in a modern office with soft cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq4fCQ4nxbW-vMdCydX-yLnJ5RF8UjJ3H1IgGpMFQih_3MTtlngdLpvnKJ2FR6n3KMYXpshMhUgwp_wYSmntXF-C84EsXNZp7S8OrOCdmXvvZCYWEG9QoGcrGeli0LgerT6ZCI-Ocs3bh9L1xO2g5NKZsMCXzsdtHeg5AWLOk4CSba9ypD6kA86S54lhcPoZ_GYJbPMJHbvBbRCqoRYNiO28ItxFbOIR0wwv37u4vtmv4FjuJ_Pn4BEp6gVYYyaQfCTqAjYW8RUOZA"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 space-y-8">
+<!-- Macro Dashboard Header (Reference IMAGE_3) -->
+<section>
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="text-3xl font-black font-headline tracking-tight">Market Intelligence Hub</h2>
+<p class="text-slate-500 font-mono text-xs mt-1 uppercase tracking-widest">Global Macro Snapshot • Live Data Stream</p>
+</div>
+<div class="flex gap-2">
+<div class="bg-surface-container-low px-4 py-2 border-l-2 border-secondary/50">
+<p class="text-[0.6rem] text-slate-500 font-mono uppercase">Fear &amp; Greed</p>
+<p class="text-lg font-bold text-secondary font-headline">72 <span class="text-[0.6rem] font-normal text-slate-400">GREED</span></p>
+</div>
+<div class="bg-surface-container-low px-4 py-2 border-l-2 border-primary/50">
+<p class="text-[0.6rem] text-slate-500 font-mono uppercase">VIX Index</p>
+<p class="text-lg font-bold text-primary font-headline">13.42 <span class="text-[0.6rem] font-normal text-slate-400">-4.2%</span></p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<!-- Top Gainers Card -->
+<div class="bg-surface-container p-6 space-y-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-center">
+<h3 class="text-[0.6875rem] font-mono font-bold text-secondary uppercase tracking-widest">Top Gainers</h3>
+<span class="material-symbols-outlined text-secondary text-sm">trending_up</span>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">NVDA</span>
+<span class="text-secondary font-bold font-mono">+4.28%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">AMD</span>
+<span class="text-secondary font-bold font-mono">+3.15%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">TSM</span>
+<span class="text-secondary font-bold font-mono">+2.91%</span>
+</div>
+</div>
+</div>
+<!-- Top Losers Card -->
+<div class="bg-surface-container p-6 space-y-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-center">
+<h3 class="text-[0.6875rem] font-mono font-bold text-error uppercase tracking-widest">Top Losers</h3>
+<span class="material-symbols-outlined text-error text-sm">trending_down</span>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">BA</span>
+<span class="text-error font-bold font-mono">-2.45%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">F</span>
+<span class="text-error font-bold font-mono">-1.82%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-mono text-sm">XOM</span>
+<span class="text-error font-bold font-mono">-1.54%</span>
+</div>
+</div>
+</div>
+<!-- Major Indices Summary -->
+<div class="md:col-span-2 bg-surface-container-high p-6 flex items-center justify-between border-t-2 border-primary">
+<div class="space-y-1">
+<p class="text-[0.6875rem] font-mono text-slate-500 uppercase">S&amp;P 500 Performance</p>
+<p class="text-4xl font-black font-headline text-on-background">5,137.08</p>
+<p class="text-secondary font-bold font-mono">+0.80% <span class="text-slate-400 font-normal ml-2">TODAY</span></p>
+</div>
+<div class="h-16 w-48 relative overflow-hidden">
+<!-- SVG Sparkline Representation -->
+<svg class="w-full h-full" viewbox="0 0 100 40">
+<path d="M0 35 L10 32 L20 34 L30 28 L40 25 L50 20 L60 22 L70 15 L80 18 L90 5 L100 10" fill="none" stroke="#00d1ff" stroke-width="2"></path>
+<path d="M0 35 L10 32 L20 34 L30 28 L40 25 L50 20 L60 22 L70 15 L80 18 L90 5 L100 10 L100 40 L0 40 Z" fill="url(#grad1)"></path>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#00d1ff;stop-opacity:0.2"></stop>
+<stop offset="100%" style="stop-color:#00d1ff;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Sector Matrix & Advanced Metrics (Reference IMAGE_2) -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Sector Performance Heatmap (Visual Breakdown) -->
+<div class="lg:col-span-2 bg-surface-container p-6 border-t border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-sm font-headline font-bold uppercase tracking-tight">Sector Intelligence Matrix</h3>
+<button class="text-[0.6rem] font-mono text-primary border border-primary/20 px-2 py-1">DETAILED HEATMAP</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+<div class="bg-secondary-container/20 p-4 h-32 flex flex-col justify-between border-l-2 border-secondary">
+<span class="text-[0.6rem] font-mono uppercase text-slate-400">Technology</span>
+<div>
+<p class="text-xl font-bold font-headline text-secondary">+2.4%</p>
+<p class="text-[0.5rem] font-mono text-slate-500">BULLISH SENTIMENT</p>
+</div>
+</div>
+<div class="bg-secondary-container/10 p-4 h-32 flex flex-col justify-between border-l-2 border-secondary/40">
+<span class="text-[0.6rem] font-mono uppercase text-slate-400">Healthcare</span>
+<div>
+<p class="text-xl font-bold font-headline text-secondary">+0.8%</p>
+<p class="text-[0.5rem] font-mono text-slate-500">NEUTRAL SENTIMENT</p>
+</div>
+</div>
+<div class="bg-error-container/10 p-4 h-32 flex flex-col justify-between border-l-2 border-error/40">
+<span class="text-[0.6rem] font-mono uppercase text-slate-400">Energy</span>
+<div>
+<p class="text-xl font-bold font-headline text-error">-1.2%</p>
+<p class="text-[0.5rem] font-mono text-slate-500">BEARISH SENTIMENT</p>
+</div>
+</div>
+<div class="bg-secondary-container/15 p-4 h-32 flex flex-col justify-between border-l-2 border-secondary/70">
+<span class="text-[0.6rem] font-mono uppercase text-slate-400">Finance</span>
+<div>
+<p class="text-xl font-bold font-headline text-secondary">+1.6%</p>
+<p class="text-[0.5rem] font-mono text-slate-500">BULLISH SENTIMENT</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Piotroski & Magic Formula (Reference IMAGE_2) -->
+<div class="bg-surface-container p-6 border-t border-primary space-y-6">
+<h3 class="text-sm font-headline font-bold uppercase tracking-tight">Deep Analysis Filters</h3>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-low border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[0.6875rem] font-mono font-bold text-primary uppercase">Piotroski F-Score</p>
+<span class="bg-primary-container text-on-primary-fixed px-1.5 py-0.5 text-[0.6rem] font-bold">ALPHA</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="text-3xl font-black font-headline">8</span>
+<span class="text-slate-500 text-xs font-mono pb-1">/ 9 POINTS</span>
+</div>
+<p class="text-[0.6rem] text-slate-500 mt-2 font-mono leading-relaxed">Financial strength indicator focusing on accounting quality and profitability.</p>
+</div>
+<div class="p-4 bg-surface-container-low border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[0.6875rem] font-mono font-bold text-tertiary uppercase">Magic Formula Ranking</p>
+</div>
+<div class="flex items-end gap-2">
+<span class="text-3xl font-black font-headline">Top 5%</span>
+</div>
+<p class="text-[0.6rem] text-slate-500 mt-2 font-mono leading-relaxed">Joel Greenblatt's quantitative strategy combining earnings yield and ROIC.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Global Stock Screener Table (Reference IMAGE_4) -->
+<section class="bg-surface-container border-t border-outline-variant/10">
+<div class="px-6 py-4 flex justify-between items-center border-b border-outline-variant/5">
+<h3 class="text-sm font-headline font-bold uppercase tracking-tight">Global Market Screener</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest">
+<span class="text-[0.6rem] font-mono text-slate-500">REGION:</span>
+<span class="text-[0.6rem] font-mono text-primary font-bold uppercase">NORTH AMERICA</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest">
+<span class="text-[0.6rem] font-mono text-slate-500">CAPACITY:</span>
+<span class="text-[0.6rem] font-mono text-primary font-bold uppercase">MEGA CAP</span>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant/10">
+<th class="px-6 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">Ticker</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">1D %</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">1Y %</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest text-center">1Y Trend</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">Div Yield</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">P/E</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">P/S</th>
+<th class="px-4 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">MCAP</th>
+<th class="px-6 py-4 text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest text-right">ROE</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-black text-[0.6rem] group-hover:bg-primary-container group-hover:text-on-primary-fixed transition-colors">AAPL</div>
+<div>
+<p class="text-xs font-bold font-headline">Apple Inc.</p>
+<p class="text-[0.6rem] text-slate-500 font-mono">NASDAQ</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-secondary font-bold">+0.45%</td>
+<td class="px-4 py-4 text-xs font-mono text-secondary font-bold">+18.2%</td>
+<td class="px-4 py-4">
+<div class="w-20 h-6 mx-auto">
+<svg class="w-full h-full stroke-secondary fill-none stroke-2" viewbox="0 0 80 20">
+<polyline points="0,15 10,12 20,18 30,10 40,8 50,5 60,12 70,2 80,4"></polyline>
+</svg>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">0.52%</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">28.4x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">7.2x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">2.82T</td>
+<td class="px-6 py-4 text-xs font-mono text-right text-primary font-bold">154.2%</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-black text-[0.6rem] group-hover:bg-primary-container group-hover:text-on-primary-fixed transition-colors">MSFT</div>
+<div>
+<p class="text-xs font-bold font-headline">Microsoft Corp.</p>
+<p class="text-[0.6rem] text-slate-500 font-mono">NASDAQ</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-secondary font-bold">+1.12%</td>
+<td class="px-4 py-4 text-xs font-mono text-secondary font-bold">+52.4%</td>
+<td class="px-4 py-4">
+<div class="w-20 h-6 mx-auto">
+<svg class="w-full h-full stroke-secondary fill-none stroke-2" viewbox="0 0 80 20">
+<polyline points="0,18 10,15 20,12 30,10 40,9 50,7 60,5 70,3 80,1"></polyline>
+</svg>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">0.71%</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">36.1x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">12.5x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">3.04T</td>
+<td class="px-6 py-4 text-xs font-mono text-right text-primary font-bold">39.1%</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-black text-[0.6rem] group-hover:bg-primary-container group-hover:text-on-primary-fixed transition-colors">GOOGL</div>
+<div>
+<p class="text-xs font-bold font-headline">Alphabet Inc.</p>
+<p class="text-[0.6rem] text-slate-500 font-mono">NASDAQ</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-error font-bold">-0.22%</td>
+<td class="px-4 py-4 text-xs font-mono text-secondary font-bold">+41.8%</td>
+<td class="px-4 py-4">
+<div class="w-20 h-6 mx-auto">
+<svg class="w-full h-full stroke-secondary fill-none stroke-2" viewbox="0 0 80 20">
+<polyline points="0,15 15,10 30,12 45,5 60,8 80,2"></polyline>
+</svg>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">N/A</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">22.8x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">5.9x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">1.75T</td>
+<td class="px-6 py-4 text-xs font-mono text-right text-primary font-bold">27.4%</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-black text-[0.6rem] group-hover:bg-primary-container group-hover:text-on-primary-fixed transition-colors">TSLA</div>
+<div>
+<p class="text-xs font-bold font-headline">Tesla, Inc.</p>
+<p class="text-[0.6rem] text-slate-500 font-mono">NASDAQ</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-error font-bold">-1.52%</td>
+<td class="px-4 py-4 text-xs font-mono text-error font-bold">-12.4%</td>
+<td class="px-4 py-4">
+<div class="w-20 h-6 mx-auto">
+<svg class="w-full h-full stroke-error fill-none stroke-2" viewbox="0 0 80 20">
+<polyline points="0,2 10,5 20,4 30,10 40,8 50,15 60,12 70,18 80,16"></polyline>
+</svg>
+</div>
+</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">N/A</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">45.2x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">6.1x</td>
+<td class="px-4 py-4 text-xs font-mono text-slate-300">645B</td>
+<td class="px-6 py-4 text-xs font-mono text-right text-primary font-bold">18.2%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-lowest flex justify-between items-center text-[0.6875rem] font-mono text-slate-500">
+<div>Showing 1-25 of 1,248 Mega Cap assets</div>
+<div class="flex gap-4">
+<button class="hover:text-primary transition-colors">PREV</button>
+<div class="flex gap-2">
+<span class="text-primary font-bold border-b border-primary">01</span>
+<span class="hover:text-on-background cursor-pointer">02</span>
+<span class="hover:text-on-background cursor-pointer">03</span>
+</div>
+<button class="hover:text-primary transition-colors">NEXT</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer Meta -->
+<footer class="mt-auto border-t border-outline-variant/10 p-6 flex flex-wrap justify-between items-center bg-surface-container-lowest">
+<div class="flex gap-8 items-center">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">Server Status: Nominal</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">Market Status: <span class="text-secondary">Open</span></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[0.6rem] font-mono text-slate-500 uppercase tracking-widest">Last Update: <span class="text-primary font-bold">14:32:01 EST</span></span>
+</div>
+</div>
+<div class="text-[0.6rem] font-mono text-slate-600">
+                © 2024 STOCKLENS ANALYTICS. PROPRIETARY DATA ENGINE. NO INVESTMENT ADVICE.
+            </div>
+</footer>
+</main>
+<!-- Contextual FAB (Restricted to Home/Dash as per instruction, purely for UI anchor) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary shadow-[0_0_30px_rgba(0,209,255,0.3)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group">
+<span class="material-symbols-outlined text-on-primary-fixed text-2xl" style="font-variation-settings: 'FILL' 1;">add_chart</span>
+<div class="absolute right-16 px-4 py-2 bg-surface-container-highest border border-primary/20 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<p class="text-[0.6875rem] font-mono font-bold text-primary">CREATE CUSTOM ALERT</p>
+</div>
+</button>
+</body></html>

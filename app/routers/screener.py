@@ -107,7 +107,7 @@ async def get_last_updated():
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT MAX(updated_at) AS last_updated FROM fundamentals")
     ts = row["last_updated"] if row else None
-    return {"last_updated": ts.isoformat() if ts else None}
+    return {"last_updated": str(ts) if ts else None}
 
 
 @router.get("/meta/sector-averages")

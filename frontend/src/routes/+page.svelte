@@ -1,12 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ScreenerFilters from '$lib/components/screener/ScreenerFilters.svelte';
-  import ScreenerTable from '$lib/components/screener/ScreenerTable.svelte';
+  import AppSidebar from '$lib/components/shell/AppSidebar.svelte';
+  import AppTopbar from '$lib/components/shell/AppTopbar.svelte';
+  import Dashboard from '$lib/components/dashboard/Dashboard.svelte';
+  import ScreenerView from '$lib/components/screener/ScreenerView.svelte';
+  import WatchlistView from '$lib/components/screener/WatchlistView.svelte';
   import ScoreRanking from '$lib/components/screener/ScoreRanking.svelte';
   import MarketFeed from '$lib/components/screener/MarketFeed.svelte';
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
   import { getScreener, getCompany, getChart } from '$lib/api/client';
   import { selectedTicker, companyData, chartData, activeTab } from '$lib/stores/screener';
+  import { currentView, type AppView } from '$lib/stores/navigation';
   import { watchlist } from '$lib/stores/watchlist';
   import type { StockRow } from '$lib/api/types';
 
@@ -14,6 +18,8 @@
   let total = $state(0);
   let loading = $state(false);
   let hasMore = $state(true);
+  let screenerLoaded = $state(false);
+
   const PANEL_WIDTH_KEY = 'stonklens-panel-width';
   let panelWidth = $state((() => {
     try {
@@ -22,37 +28,18 @@
     } catch {}
     return Math.round(window.innerWidth * 2 / 5);
   })());
-  let watchlistActive = $state(false);
-  let rankingsActive = $state(false);
-  let highlightsActive = $state(false);
-
-  type ViewMode = 'screener' | 'rankings' | 'highlights';
-  let viewMode = $derived<ViewMode>(
-    highlightsActive ? 'highlights' : rankingsActive ? 'rankings' : 'screener'
-  );
 
   const PAGE_SIZE = 100;
   let currentFilters = $state<{ country: string|null; sector: string; search: string }>({ country: null, sector: '', search: '' });
   let sortBy = $state('market_cap');
   let sortDir = $state<'asc' | 'desc'>('desc');
 
-  let displayStocks = $derived(
-    watchlistActive ? stocks.filter(s => $watchlist.has(s.ticker)) : stocks
-  );
-  let displayTotal = $derived(
-    watchlistActive ? displayStocks.length : total
-  );
+  // stocks and total are shared state for screener/highlights/watchlist views
 
   async function loadScreener(filters?: { country: string|null; sector: string; search: string }) {
     if (filters) {
       currentFilters = filters;
       stocks = [];
-      // Switch back to screener view when filters are applied
-      if (rankingsActive || highlightsActive) {
-        rankingsActive = false;
-        highlightsActive = false;
-        updateUrl({ view: null });
-      }
     }
     loading = true;
     const data = await getScreener({
@@ -70,6 +57,28 @@
     total = data.total;
     hasMore = stocks.length < total;
     loading = false;
+    screenerLoaded = true;
+  }
+
+  async function ensureAllStocksLoaded() {
+    if (!screenerLoaded) await loadScreener(currentFilters);
+    if (hasMore) {
+      loading = true;
+      while (stocks.length < total) {
+        const data = await getScreener({
+          ...currentFilters,
+          sort_by: sortBy,
+          sort_dir: sortDir,
+          limit: PAGE_SIZE,
+          offset: stocks.length,
+        });
+        stocks = [...stocks, ...data.stocks];
+        total = data.total;
+        if (data.stocks.length === 0) break;
+      }
+      hasMore = false;
+      loading = false;
+    }
   }
 
   async function loadMore() {
@@ -99,49 +108,9 @@
     chartData.set(chart);
   }
 
-  async function toggleWatchlist() {
-    watchlistActive = !watchlistActive;
-    if (watchlistActive && hasMore) {
-      // Load all remaining stocks so watchlist filter has the full dataset
-      loading = true;
-      while (stocks.length < total) {
-        const data = await getScreener({
-          ...currentFilters,
-          sort_by: sortBy,
-          sort_dir: sortDir,
-          limit: PAGE_SIZE,
-          offset: stocks.length,
-        });
-        stocks = [...stocks, ...data.stocks];
-        total = data.total;
-        if (data.stocks.length === 0) break;
-      }
-      hasMore = false;
-      loading = false;
-    }
-  }
-
   async function exportCsv() {
-    // Load all stocks before exporting
-    if (hasMore) {
-      loading = true;
-      while (stocks.length < total) {
-        const data = await getScreener({
-          ...currentFilters,
-          sort_by: sortBy,
-          sort_dir: sortDir,
-          limit: PAGE_SIZE,
-          offset: stocks.length,
-        });
-        stocks = [...stocks, ...data.stocks];
-        total = data.total;
-        if (data.stocks.length === 0) break;
-      }
-      hasMore = false;
-      loading = false;
-    }
-
-    const toExport = watchlistActive ? stocks.filter(s => $watchlist.has(s.ticker)) : stocks;
+    await ensureAllStocksLoaded();
+    const toExport = $currentView === 'watchlist' ? stocks.filter(s => $watchlist.has(s.ticker)) : stocks;
     const fields: { key: keyof StockRow; label: string }[] = [
       { key: 'name', label: 'Name' },
       { key: 'ticker', label: 'Ticker' },
@@ -180,55 +149,12 @@
     URL.revokeObjectURL(url);
   }
 
-  function toggleRankings() {
-    rankingsActive = !rankingsActive;
-    if (rankingsActive) highlightsActive = false;
-    updateUrl({ view: rankingsActive ? 'rankings' : null });
-  }
-
-  async function toggleHighlights() {
-    highlightsActive = !highlightsActive;
-    if (highlightsActive) {
-      rankingsActive = false;
-      // Load all stocks for accurate highlights
-      if (hasMore) {
-        loading = true;
-        while (stocks.length < total) {
-          const data = await getScreener({
-            ...currentFilters,
-            sort_by: sortBy,
-            sort_dir: sortDir,
-            limit: PAGE_SIZE,
-            offset: stocks.length,
-          });
-          stocks = [...stocks, ...data.stocks];
-          total = data.total;
-          if (data.stocks.length === 0) break;
-        }
-        hasMore = false;
-        loading = false;
-      }
+  function handleGlobalSearch(query: string) {
+    if ($currentView !== 'screener' && $currentView !== 'watchlist') {
+      currentView.set('screener');
     }
-    updateUrl({ view: highlightsActive ? 'highlights' : null });
-  }
-
-  function onResize(e: MouseEvent) {
-    e.preventDefault();
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-
-    function onMove(ev: MouseEvent) {
-      panelWidth = Math.max(400, Math.min(window.innerWidth - ev.clientX, window.innerWidth - 100));
-    }
-    function onUp() {
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      localStorage.setItem(PANEL_WIDTH_KEY, String(panelWidth));
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    currentFilters = { ...currentFilters, search: query };
+    loadScreener(currentFilters);
   }
 
   // URL sync
@@ -253,6 +179,13 @@
     };
   }
 
+  // Sync URL when view changes
+  $effect(() => {
+    if (mounted) {
+      updateUrl({ view: $currentView });
+    }
+  });
+
   // Clear URL stock param when panel is closed
   $effect(() => {
     if ($selectedTicker === null && mounted) {
@@ -260,17 +193,36 @@
     }
   });
 
+  // Load screener data when switching to a view that needs it
+  let lastTriggeredView = '';
+  $effect(() => {
+    const view = $currentView;
+    if (!mounted || view === lastTriggeredView) return;
+
+    if (view === 'screener' || view === 'watchlist' || view === 'highlights') {
+      lastTriggeredView = view;
+      if (stocks.length === 0 && !loading) {
+        loadScreener(currentFilters).then(() => {
+          if (view === 'highlights' || view === 'watchlist') {
+            ensureAllStocksLoaded();
+          }
+        });
+      } else if (view === 'highlights' || view === 'watchlist') {
+        ensureAllStocksLoaded();
+      }
+    }
+  });
+
   let mounted = false;
 
   onMount(() => {
     mounted = true;
-    const { stock, view } = readUrl();
+    const { stock } = readUrl();
 
-    // Restore view mode from URL
-    if (view === 'rankings') { rankingsActive = true; highlightsActive = false; }
-    else if (view === 'highlights') { highlightsActive = true; rankingsActive = false; }
-
-    loadScreener(currentFilters);
+    // Load screener data if starting on a view that needs it
+    if ($currentView !== 'dashboard') {
+      loadScreener(currentFilters);
+    }
 
     // Auto-select stock from URL after screener loads
     if (stock) {
@@ -280,8 +232,9 @@
     // Handle browser back/forward
     window.addEventListener('popstate', () => {
       const { stock: s, view: v } = readUrl();
-      rankingsActive = v === 'rankings';
-      highlightsActive = v === 'highlights';
+      if (v && ['dashboard', 'screener', 'watchlist', 'rankings', 'highlights'].includes(v)) {
+        currentView.set(v as AppView);
+      }
       if (s && s !== $selectedTicker) {
         selectStock(s, false);
       } else if (!s && $selectedTicker) {
@@ -292,39 +245,121 @@
       }
     });
   });
+
+  function onResize(e: MouseEvent) {
+    e.preventDefault();
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    function onMove(ev: MouseEvent) {
+      panelWidth = Math.max(400, Math.min(window.innerWidth - ev.clientX, window.innerWidth - 100));
+    }
+    function onUp() {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      localStorage.setItem(PANEL_WIDTH_KEY, String(panelWidth));
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
 </script>
 
-<div class="app">
-  <ScreenerFilters total={displayTotal} onFilter={loadScreener} {watchlistActive} onToggleWatchlist={toggleWatchlist} onExport={exportCsv} {rankingsActive} onToggleRankings={toggleRankings} {highlightsActive} onToggleHighlights={toggleHighlights} />
+<svelte:head>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+</svelte:head>
 
-  <div class="main">
-    <div class="table-panel">
-      {#if viewMode === 'highlights'}
-        <MarketFeed stocks={stocks} onSelect={selectStock} />
-      {:else if viewMode === 'rankings'}
+<div class="app-shell">
+  <AppSidebar />
+
+  <div class="main-area">
+    <AppTopbar total={total} onSearch={handleGlobalSearch} />
+
+    <div class="content">
+      {#if $currentView === 'dashboard'}
+        <Dashboard onSelectStock={(ticker) => selectStock(ticker)} />
+      {:else if $currentView === 'screener'}
+        <ScreenerView
+          {stocks}
+          {total}
+          onFilter={loadScreener}
+          onSelect={selectStock}
+          selectedTicker={$selectedTicker}
+          onLoadMore={loadMore}
+          {onSort}
+          onExport={exportCsv}
+          {loading}
+          {hasMore}
+        />
+      {:else if $currentView === 'watchlist'}
+        <WatchlistView
+          {stocks}
+          onSelect={selectStock}
+          selectedTicker={$selectedTicker}
+        />
+      {:else if $currentView === 'highlights'}
+        {#if loading && stocks.length === 0}
+          <div class="loading-state">
+            <p class="loading-text">Loading market data...</p>
+          </div>
+        {:else}
+          <MarketFeed stocks={stocks} onSelect={selectStock} />
+        {/if}
+      {:else if $currentView === 'rankings'}
         <ScoreRanking onSelect={selectStock} />
-      {:else}
-        <ScreenerTable stocks={displayStocks} onSelect={selectStock} selectedTicker={$selectedTicker} onLoadMore={loadMore} {onSort} {loading} {hasMore} />
       {/if}
     </div>
-
-    {#if $selectedTicker}
-      <div class="detail-overlay" style="width:{panelWidth}px">
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="resize-handle" onmousedown={onResize}></div>
-        <DetailPanel />
-      </div>
-    {/if}
   </div>
+
+  {#if $selectedTicker}
+    <div class="detail-overlay" style="width:{panelWidth}px">
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="resize-handle" onmousedown={onResize}></div>
+      <DetailPanel />
+    </div>
+  {/if}
 </div>
 
 <style>
-  .app { display: flex; flex-direction: column; height: 100vh; }
-  .main { position: relative; flex: 1; overflow: hidden; }
-  .table-panel { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #111417;
+  }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  .loading-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
 
   .detail-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
@@ -332,7 +367,7 @@
     flex-direction: column;
     background: var(--bg);
     border-left: 1px solid var(--border);
-    z-index: 10;
+    z-index: 70;
     box-shadow: -8px 0 30px rgba(0, 0, 0, 0.5);
     animation: slide-in 0.2s ease-out;
   }

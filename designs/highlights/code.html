@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KINETIC LEDGER | HIGHLIGHTS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .font-mono { font-family: 'JetBrains+Mono', monospace; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom scrollbar for terminal feel */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0c0e12; }
+        ::-webkit-scrollbar-thumb { background: #3b494b; }
+        ::-webkit-scrollbar-thumb:hover { background: #00dbe9; }
+
+        .glow-cyan { box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+        .bg-obsidian { background-color: #0c0e12; }
+        
+        @keyframes cyan-glow-pulse {
+            0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); }
+        }
+        .active-glow { animation: cyan-glow-pulse 2s infinite; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-low": "#191c1f",
+                        "on-error": "#690005",
+                        "tertiary": "#fff3f2",
+                        "surface-variant": "#323539",
+                        "surface-container": "#1d2023",
+                        "on-surface": "#e1e2e7",
+                        "surface-container-lowest": "#0c0e12",
+                        "primary": "#dbfcff",
+                        "on-primary": "#00363a",
+                        "on-primary-container": "#006970",
+                        "primary-container": "#00f0ff",
+                        "outline-variant": "#3b494b",
+                        "background": "#111417",
+                        "surface-dim": "#111417",
+                        "surface-bright": "#37393d",
+                        "surface-container-high": "#282a2e",
+                        "surface-container-highest": "#323539",
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-14 bg-slate-950/95 backdrop-blur-xl border-b border-white/10">
+<div class="flex items-center gap-8">
+<span class="text-xl font-black tracking-widest text-cyan-400 font-headline">KINETIC LEDGER</span>
+<!-- Ticker Data Ribbon -->
+<div class="hidden lg:flex items-center gap-6 overflow-hidden">
+<div class="flex items-center gap-2 whitespace-nowrap">
+<span class="text-slate-500 font-mono text-xs">S&amp;P 500:</span>
+<span class="text-cyan-400 font-bold font-mono text-xs">5,243.20</span>
+</div>
+<div class="flex items-center gap-2 whitespace-nowrap">
+<span class="text-slate-500 font-mono text-xs">NASDAQ:</span>
+<span class="text-cyan-400 font-bold font-mono text-xs">18,342.15</span>
+</div>
+<div class="flex items-center gap-2 whitespace-nowrap">
+<span class="text-slate-500 font-mono text-xs">DJIA:</span>
+<span class="text-cyan-400 font-bold font-mono text-xs">39,127.14</span>
+</div>
+<div class="flex items-center gap-2 whitespace-nowrap">
+<span class="text-slate-500 font-mono text-xs">BTC:</span>
+<span class="text-cyan-400 font-bold font-mono text-xs">67,432.10</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+<input class="bg-surface-container-lowest border-none border-b border-outline-variant/30 text-xs font-mono w-48 focus:ring-0 focus:border-primary-container transition-all" placeholder="SEARCH_ASSET..." type="text"/>
+</div>
+<button class="text-slate-500 hover:text-cyan-300 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-500 hover:text-cyan-300 transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+<img alt="User terminal profile" class="w-full h-full object-cover" data-alt="Cyberpunk style minimalist user avatar icon with neon blue accents and grid patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9xRXbkEkZFmkBPvpYXkrYHwQFWait6kiyxUrrRDADIlqjVfVV_gbmFtQm8oPoXHjHxrwPEDlbvZW-U-48eIQ5h7JPu_5O1oqH_MtbfozXEJLw4Iv1lxgvzp-pV4q-1iZp03X__YZGPhT2pnPlEUNI6rfQ2pf4CrLAH5-sT83bBHPP_cHloEjswIFoIj3NxO3w2-N5Vp7vXCo9YvQaKzX1m818yKNLirdGFsLfiCww7B8RIH0DGnnXMe6NnL-S1MMntcEfMvgO14Rp"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-64px)] w-64 flex flex-col bg-slate-900 border-r border-white/5 z-40">
+<div class="p-6 flex flex-col gap-1">
+<span class="text-[10px] text-slate-500 font-mono tracking-tighter">TERMINAL_01</span>
+<span class="text-xs text-cyan-400 font-headline font-bold uppercase tracking-widest">Sovereign Architect</span>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-3 text-slate-500 hover:bg-slate-800 hover:text-slate-200 transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="dashboard">dashboard</span>
+<span class="text-xs font-headline font-bold uppercase tracking-wider">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 text-slate-500 hover:bg-slate-800 hover:text-slate-200 transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="monitoring">monitoring</span>
+<span class="text-xs font-headline font-bold uppercase tracking-wider">Markets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 text-slate-500 hover:bg-slate-800 hover:text-slate-200 transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="filter_alt">filter_alt</span>
+<span class="text-xs font-headline font-bold uppercase tracking-wider">Screener</span>
+</a>
+<!-- Active Tab: Highlights -->
+<a class="flex items-center gap-3 px-3 py-3 bg-cyan-400/10 text-cyan-400 border-l-4 border-cyan-400 active-glow" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-xs font-headline font-bold uppercase tracking-wider">Highlights</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 text-slate-500 hover:bg-slate-800 hover:text-slate-200 transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="notifications_active">notifications_active</span>
+<span class="text-xs font-headline font-bold uppercase tracking-wider">Alerts</span>
+</a>
+</nav>
+<div class="p-4 border-t border-white/5">
+<button class="w-full py-3 bg-cyan-400/10 border border-cyan-400 text-cyan-400 font-headline font-extrabold text-xs tracking-widest hover:bg-cyan-400 hover:text-on-primary transition-all active:scale-[0.98]">
+                EXECUTE TRADE
+            </button>
+</div>
+<div class="px-3 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-200 text-[10px] font-mono uppercase" href="#">
+<span class="material-symbols-outlined text-xs" data-icon="help">help</span> Support
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-200 text-[10px] font-mono uppercase" href="#">
+<span class="material-symbols-outlined text-xs" data-icon="terminal">terminal</span> Logs
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 mt-14 mb-6 p-8 min-h-screen bg-surface-dim">
+<!-- Header -->
+<header class="mb-10 border-l-4 border-cyan-400 pl-6">
+<h1 class="text-4xl font-black font-headline tracking-[0.3em] text-on-surface uppercase mb-2">MARKET_HIGHLIGHTS</h1>
+<p class="text-xs font-mono text-slate-500 tracking-wider">Live Market Intelligence Feed // System Version 3.4.1 // Encryption: RSA-4096</p>
+</header>
+<div class="grid grid-cols-12 gap-8">
+<!-- TOP_GAINERS -->
+<section class="col-span-12 lg:col-span-6 bg-surface-container-low border border-white/5 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 text-[10px] font-mono text-emerald-400/30">MODULE::041</div>
+<div class="p-4 border-b border-white/5 flex justify-between items-center">
+<h2 class="text-sm font-headline font-extrabold tracking-widest uppercase">TOP_GAINERS</h2>
+<span class="material-symbols-outlined text-emerald-400 text-sm">trending_up</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-mono text-xs">
+<thead class="bg-surface-container-lowest text-slate-500 uppercase">
+<tr>
+<th class="p-4 font-normal">Ticker</th>
+<th class="p-4 font-normal text-right">Price</th>
+<th class="p-4 font-normal text-right">Change %</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="p-4"><span class="text-cyan-400">NVDA</span> <span class="text-[10px] text-slate-500 ml-2">NVIDIA CORP</span></td>
+<td class="p-4 text-right">924.10</td>
+<td class="p-4 text-right text-emerald-400 font-bold">+5.24%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="p-4"><span class="text-cyan-400">SMCI</span> <span class="text-[10px] text-slate-500 ml-2">SUPER MICRO</span></td>
+<td class="p-4 text-right">1,140.01</td>
+<td class="p-4 text-right text-emerald-400 font-bold">+4.12%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="p-4"><span class="text-cyan-400">ARM</span> <span class="text-[10px] text-slate-500 ml-2">ARM HOLDINGS</span></td>
+<td class="p-4 text-right">132.45</td>
+<td class="p-4 text-right text-emerald-400 font-bold">+3.88%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="p-4"><span class="text-cyan-400">TSM</span> <span class="text-[10px] text-slate-500 ml-2">TAIWAN SEMI</span></td>
+<td class="p-4 text-right">145.20</td>
+<td class="p-4 text-right text-emerald-400 font-bold">+2.95%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- TOP_LOSERS -->
+<section class="col-span-12 lg:col-span-6 bg-surface-container-low border border-white/5 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 text-[10px] font-mono text-error/30">MODULE::042</div>
+<div class="p-4 border-b border-white/5 flex justify-between items-center">
+<h2 class="text-sm font-headline font-extrabold tracking-widest uppercase">TOP_LOSERS</h2>
+<span class="material-symbols-outlined text-error text-sm">trending_down</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-mono text-xs">
+<thead class="bg-surface-container-lowest text-slate-500 uppercase">
+<tr>
+<th class="p-4 font-normal">Ticker</th>
+<th class="p-4 font-normal text-right">Price</th>
+<th class="p-4 font-normal text-right">Change %</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4"><span class="text-cyan-400">BA</span> <span class="text-[10px] text-slate-500 ml-2">BOEING CO</span></td>
+<td class="p-4 text-right">178.44</td>
+<td class="p-4 text-right text-error font-bold">-4.52%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4"><span class="text-cyan-400">TSLA</span> <span class="text-[10px] text-slate-500 ml-2">TESLA INC</span></td>
+<td class="p-4 text-right">162.50</td>
+<td class="p-4 text-right text-error font-bold">-3.21%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4"><span class="text-cyan-400">WBD</span> <span class="text-[10px] text-slate-500 ml-2">WARNER BROS</span></td>
+<td class="p-4 text-right">8.12</td>
+<td class="p-4 text-right text-error font-bold">-2.98%</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="p-4"><span class="text-cyan-400">PFE</span> <span class="text-[10px] text-slate-500 ml-2">PFIZER INC</span></td>
+<td class="p-4 text-right">25.30</td>
+<td class="p-4 text-right text-error font-bold">-2.44%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- LATEST_ANALYST_REPORTS -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container-low border border-white/5">
+<div class="p-4 border-b border-white/5 flex justify-between items-center">
+<h2 class="text-sm font-headline font-extrabold tracking-widest uppercase">LATEST_ANALYST_REPORTS</h2>
+<span class="text-[10px] font-mono text-slate-500">SORT: CHRONOLOGICAL</span>
+</div>
+<div class="p-0">
+<div class="flex flex-col">
+<div class="p-4 flex items-center justify-between hover:bg-white/5 border-b border-white/5 transition-colors">
+<div class="flex flex-col gap-1">
+<span class="text-xs font-mono font-bold text-cyan-400 uppercase">AAPL.US // Q4-2025 OUTLOOK</span>
+<span class="text-[10px] text-slate-500">GOLDMAN SACHS RESEARCH</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">RATING</div>
+<div class="text-xs font-mono text-emerald-400 font-bold uppercase">OVERWEIGHT</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">TARGET</div>
+<div class="text-xs font-mono text-on-surface">$215.00</div>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-white/5 border-b border-white/5 transition-colors">
+<div class="flex flex-col gap-1">
+<span class="text-xs font-mono font-bold text-cyan-400 uppercase">META.US // AI INFRASTRUCTURE DEEP-DIVE</span>
+<span class="text-[10px] text-slate-500">JPMORGAN CHASE</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">RATING</div>
+<div class="text-xs font-mono text-emerald-400 font-bold uppercase">BUY</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">TARGET</div>
+<div class="text-xs font-mono text-on-surface">$550.00</div>
+</div>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+<div class="flex flex-col gap-1">
+<span class="text-xs font-mono font-bold text-cyan-400 uppercase">MSFT.US // AZURE CLOUD SCALING</span>
+<span class="text-[10px] text-slate-500">MORGAN STANLEY</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">RATING</div>
+<div class="text-xs font-mono text-slate-400 font-bold uppercase">HOLD</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-slate-500 font-mono">TARGET</div>
+<div class="text-xs font-mono text-on-surface">$445.00</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTOR_HEATMAP -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container-low border border-white/5">
+<div class="p-4 border-b border-white/5">
+<h2 class="text-sm font-headline font-extrabold tracking-widest uppercase">SECTOR_HEATMAP</h2>
+</div>
+<div class="p-6 space-y-6">
+<!-- Tech -->
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-mono">
+<span class="text-slate-200">TECHNOLOGY</span>
+<span class="text-emerald-400">+1.84%</span>
+</div>
+<div class="h-2 bg-surface-container-lowest flex">
+<div class="h-full bg-emerald-400" style="width: 85%"></div>
+</div>
+</div>
+<!-- Energy -->
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-mono">
+<span class="text-slate-200">ENERGY</span>
+<span class="text-error">-0.52%</span>
+</div>
+<div class="h-2 bg-surface-container-lowest flex justify-end">
+<div class="h-full bg-error" style="width: 20%"></div>
+</div>
+</div>
+<!-- Financials -->
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-mono">
+<span class="text-slate-200">FINANCIALS</span>
+<span class="text-emerald-400">+0.32%</span>
+</div>
+<div class="h-2 bg-surface-container-lowest flex">
+<div class="h-full bg-emerald-400" style="width: 35%"></div>
+</div>
+</div>
+<!-- Healthcare -->
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-mono">
+<span class="text-slate-200">HEALTHCARE</span>
+<span class="text-slate-500">0.00%</span>
+</div>
+<div class="h-2 bg-surface-container-lowest"></div>
+</div>
+<!-- Consumer Disc -->
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-mono">
+<span class="text-slate-200">CONSUMER DISCRETIONARY</span>
+<span class="text-error">-1.20%</span>
+</div>
+<div class="h-2 bg-surface-container-lowest flex justify-end">
+<div class="h-full bg-error" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 w-full z-50 flex justify-between items-center px-4 h-6 bg-slate-950 border-t border-white/10">
+<div class="flex items-center gap-6">
+<span class="text-[10px] font-mono tracking-tighter text-emerald-400">SYSTEM STATUS: OPERATIONAL</span>
+<span class="text-[10px] font-mono tracking-tighter text-emerald-400">LATENCY: 12MS</span>
+<span class="text-[10px] font-mono tracking-tighter text-emerald-400 uppercase">MARKET: OPEN</span>
+</div>
+<div class="flex items-center gap-4">
+<a class="text-[10px] font-mono tracking-tighter text-slate-600 hover:text-emerald-300 transition-colors" href="#">SERVER_04</a>
+<a class="text-[10px] font-mono tracking-tighter text-slate-600 hover:text-emerald-300 transition-colors" href="#">TELEMETRY</a>
+<a class="text-[10px] font-mono tracking-tighter text-slate-600 hover:text-emerald-300 transition-colors border-l border-white/10 pl-4" href="#">API_DOCS</a>
+</div>
+</footer>
+<!-- Decorative background element -->
+<div class="fixed inset-0 pointer-events-none z-[-1] opacity-5">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_#00f0ff_0%,_transparent_70%)] opacity-10"></div>
+<div class="w-full h-full" style="background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 50px 50px;"></div>
+</div>
+</body></html>
