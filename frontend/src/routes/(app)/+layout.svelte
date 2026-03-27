@@ -18,8 +18,11 @@
     return Math.round(window.innerWidth * 2 / 5);
   })());
 
-  function handleGlobalSearch(query: string) {
-    goto(`/screener?search=${encodeURIComponent(query)}`);
+  async function handleGlobalSearch(query: string) {
+    if ($page.url.pathname !== '/screener') {
+      await goto('/screener');
+    }
+    loadScreener({ country: null, sector: '', search: query });
   }
 
   function onResize(e: MouseEvent) {
