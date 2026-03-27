@@ -74,14 +74,6 @@
 		return filters;
 	});
 
-	// Top sectors for bottom bento
-	let topSectorEntries = $derived.by(() => {
-		return Object.entries(sectorAvgs)
-			.filter(([, v]) => v.margin != null)
-			.sort((a, b) => Math.abs(b[1].margin ?? 0) - Math.abs(a[1].margin ?? 0))
-			.slice(0, 2)
-			.map(([name, data]) => ({ name, change: data.margin ?? 0 }));
-	});
 
 	const columns: { key: string; label: string; align?: 'right' | 'center' }[] = [
 		{ key: 'name', label: 'Name / Ticker' },
@@ -234,38 +226,6 @@
 		{/if}
 	</div>
 
-	<!-- Insight Bento -->
-	<div class="bento-grid">
-		<div class="bento-card bento-card--green">
-			<div class="bento-header">
-				<h3 class="bento-label">Sector Momentum</h3>
-				<span class="material-symbols-outlined bento-icon bento-icon--green">trending_up</span>
-			</div>
-			{#each topSectorEntries as entry}
-				<div class="bento-row">
-					<span class="bento-row-name">{entry.name}</span>
-					<span class="bento-row-val" class:text-green={entry.change >= 0} class:text-red={entry.change < 0}>{fmtSignPct(entry.change)}</span>
-				</div>
-				<div class="bento-bar"><div class="bento-fill bento-fill--green" style="width: {Math.min(100, Math.abs(entry.change) * 5)}%"></div></div>
-			{/each}
-		</div>
-		<div class="bento-card bento-card--cyan">
-			<div class="bento-header">
-				<h3 class="bento-label">Market Breadth</h3>
-				<span class="material-symbols-outlined bento-icon bento-icon--cyan">pie_chart</span>
-			</div>
-			<p class="bento-big">{stocks.length > 0 ? Math.round(stocks.filter(s => (s.change_pct ?? 0) > 0).length / stocks.length * 100) : 0}%</p>
-			<p class="bento-desc">Advancing vs Declining</p>
-		</div>
-		<div class="bento-card bento-card--gold">
-			<div class="bento-header">
-				<h3 class="bento-label">Watchlist</h3>
-				<span class="material-symbols-outlined bento-icon bento-icon--gold">visibility</span>
-			</div>
-			<p class="bento-big">{$watchlist.size}</p>
-			<p class="bento-desc">Stocks tracked</p>
-		</div>
-	</div>
 </div>
 
 <style>
@@ -570,75 +530,6 @@
 	}
 	.load-more-btn:hover { background: #323538; }
 
-	/* Bento Grid */
-	.bento-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 24px;
-		padding: 24px;
-		flex-shrink: 0;
-	}
-	.bento-card {
-		background: #272a2e;
-		padding: 24px;
-	}
-	.bento-card--green { border-left: 2px solid #01f5a0; }
-	.bento-card--cyan { border-left: 2px solid #00d1ff; }
-	.bento-card--gold { border-left: 2px solid #feb127; }
-	.bento-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 16px;
-	}
-	.bento-label {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 10px;
-		font-weight: 900;
-		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		color: #859399;
-	}
-	.bento-icon { font-size: 20px; }
-	.bento-icon--green { color: #01f5a0; }
-	.bento-icon--cyan { color: #a4e6ff; }
-	.bento-icon--gold { color: #ffd59c; }
-	.bento-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 4px;
-	}
-	.bento-row-name {
-		font-size: 12px;
-		font-weight: 700;
-		color: #e1e2e7;
-	}
-	.bento-row-val {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 12px;
-	}
-	.bento-bar {
-		height: 4px;
-		background: #0b0e11;
-		margin-bottom: 12px;
-	}
-	.bento-fill { height: 100%; }
-	.bento-fill--green { background: #01f5a0; }
-	.bento-big {
-		font-family: 'Manrope', system-ui, sans-serif;
-		font-size: 1.5rem;
-		font-weight: 900;
-		color: #e1e2e7;
-	}
-	.bento-desc {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 9px;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: #859399;
-		margin-top: 4px;
-	}
 
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -647,7 +538,6 @@
 	@media (max-width: 768px) {
 		.screener-header { flex-direction: column; align-items: flex-start; }
 		.filter-grid { flex-direction: column; }
-		.bento-grid { grid-template-columns: 1fr; }
 		.table-container { margin: 0 12px; }
 	}
 </style>
