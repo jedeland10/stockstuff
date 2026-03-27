@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { currentView, type AppView } from '$lib/stores/navigation';
+	import { page } from '$app/stores';
 	import { watchlist } from '$lib/stores/watchlist';
 
-	function navigate(view: AppView) {
-		currentView.set(view);
-	}
-
-	const navItems: { view: AppView; icon: string; label: string; iconFill?: boolean }[] = [
-		{ view: 'dashboard', icon: 'dashboard', label: 'Dashboard', iconFill: true },
-		{ view: 'screener', icon: 'filter_list', label: 'Screener' },
-		{ view: 'watchlist', icon: 'visibility', label: 'Watchlist' },
-		{ view: 'highlights', icon: 'trending_up', label: 'Highlights' },
-		{ view: 'rankings', icon: 'leaderboard', label: 'Rankings' },
+	const navItems: { href: string; icon: string; label: string; iconFill?: boolean }[] = [
+		{ href: '/dashboard', icon: 'dashboard', label: 'Dashboard', iconFill: true },
+		{ href: '/screener', icon: 'filter_list', label: 'Screener' },
+		{ href: '/watchlist', icon: 'visibility', label: 'Watchlist' },
+		{ href: '/highlights', icon: 'trending_up', label: 'Highlights' },
+		{ href: '/rankings', icon: 'leaderboard', label: 'Rankings' },
 	];
+
+	let currentPath = $derived($page.url.pathname);
 </script>
 
 <aside class="sidebar">
@@ -31,29 +29,29 @@
 
 	<nav class="sidebar-nav">
 		{#each navItems as item}
-			<button
+			<a
 				class="nav-item"
-				class:active={$currentView === item.view}
-				onclick={() => navigate(item.view)}
+				class:active={currentPath === item.href}
+				href={item.href}
 			>
 				<span
 					class="material-symbols-outlined nav-icon"
-					style={$currentView === item.view && item.iconFill ? "font-variation-settings: 'FILL' 1;" : ''}
+					style={currentPath === item.href && item.iconFill ? "font-variation-settings: 'FILL' 1;" : ''}
 				>{item.icon}</span>
 				<span class="nav-label">{item.label}</span>
-				{#if item.view === 'watchlist' && $watchlist.size > 0}
+				{#if item.href === '/watchlist' && $watchlist.size > 0}
 					<span class="nav-badge">{$watchlist.size}</span>
 				{/if}
-			</button>
+			</a>
 		{/each}
 	</nav>
 
 	<div class="sidebar-footer">
-		<a class="footer-link" href="/landing">
+		<a class="footer-link" href="/">
 			<span class="material-symbols-outlined footer-icon">help</span>
 			<span>Support</span>
 		</a>
-		<a class="footer-link" href="/landing">
+		<a class="footer-link" href="/">
 			<span class="material-symbols-outlined footer-icon">code</span>
 			<span>API</span>
 		</a>
@@ -123,8 +121,6 @@
 		align-items: center;
 		gap: 12px;
 		padding: 12px 24px;
-		background: none;
-		border: none;
 		border-left: 4px solid transparent;
 		color: #64748b;
 		font-family: 'Inter', system-ui, sans-serif;
@@ -132,8 +128,7 @@
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.2s;
-		text-align: left;
-		width: 100%;
+		text-decoration: none;
 	}
 	.nav-item:hover {
 		color: #cbd5e1;
@@ -144,9 +139,7 @@
 		border-left-color: #00d1ff;
 		font-weight: 700;
 	}
-	.nav-icon {
-		font-size: 20px;
-	}
+	.nav-icon { font-size: 20px; }
 	.nav-badge {
 		margin-left: auto;
 		background: rgba(210, 153, 34, 0.15);
