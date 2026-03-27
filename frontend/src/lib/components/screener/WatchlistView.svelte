@@ -201,4 +201,11 @@
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 	}
+
+	@media (max-width: 768px) {
+		.watchlist-header { padding: 16px 12px 12px; }
+		.watchlist-title { font-size: 1.25rem; }
+		.table-container { margin: 0; }
+		.data-table { min-width: 600px; }
+	}
 </style>

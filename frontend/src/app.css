@@ -85,4 +85,14 @@ a[href*="tradingview.com"] { display: none !important; }
 
 @media (max-width: 768px) {
 	html, body { overflow: auto; }
+
+	/* Ensure horizontal scrollable tables don't break layout */
+	.table-container { -webkit-overflow-scrolling: touch; }
+}
+
+/* Safe area for devices with notches/home indicators */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	@media (max-width: 768px) {
+		html { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+	}
 }

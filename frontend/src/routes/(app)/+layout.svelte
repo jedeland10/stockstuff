@@ -126,11 +126,22 @@
   .resize-handle:hover::after { background: var(--accent); }
 
   @media (max-width: 768px) {
+    .app-shell {
+      flex-direction: column;
+      overflow: auto;
+    }
+    .main-area {
+      padding-bottom: 56px; /* space for bottom nav */
+    }
+    .content {
+      overflow: auto;
+    }
     .detail-overlay {
       width: 100% !important;
       left: 0;
       box-shadow: none;
       border-left: none;
+      bottom: 56px; /* above bottom nav */
     }
     .resize-handle { display: none; }
   }

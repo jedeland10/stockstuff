@@ -536,8 +536,17 @@
 	}
 
 	@media (max-width: 768px) {
-		.screener-header { flex-direction: column; align-items: flex-start; }
+		.screener-header {
+			flex-direction: column;
+			align-items: flex-start;
+			padding: 16px 12px 12px;
+		}
+		.screener-title { font-size: 1.25rem; }
+		.filter-console { padding: 12px; }
 		.filter-grid { flex-direction: column; }
-		.table-container { margin: 0 12px; }
+		.filter-select, .filter-input { min-width: 0; width: 100%; }
+		.country-tabs { flex-wrap: wrap; }
+		.table-container { margin: 0; }
+		.table-footer { padding: 10px 12px; }
 	}
 </style>

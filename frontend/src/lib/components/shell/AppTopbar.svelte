@@ -168,4 +168,25 @@
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 	}
+
+	@media (max-width: 768px) {
+		.topbar {
+			padding: 0 12px;
+			height: 52px;
+		}
+		.search-box input {
+			width: 120px;
+		}
+		.topbar-right { gap: 12px; }
+		.topbar-status {
+			display: none;
+		}
+	}
+	@media (max-width: 480px) {
+		.search-box input {
+			width: 80px;
+		}
+		.topbar-actions { gap: 4px; }
+		.action-btn { width: 32px; height: 32px; }
+	}
 </style>
