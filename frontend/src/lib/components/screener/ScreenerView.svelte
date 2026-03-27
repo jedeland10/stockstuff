@@ -543,7 +543,14 @@
 		}
 		.screener-title { font-size: 1.25rem; }
 		.filter-console { padding: 12px; }
-		.filter-grid { flex-direction: column; }
+		.filter-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+		}
+		.filter-grid .filter-group:first-child {
+			grid-column: 1 / -1;
+		}
 		.filter-select, .filter-input { min-width: 0; width: 100%; }
 		.country-tabs { flex-wrap: wrap; }
 		.table-container { margin: 0; }
