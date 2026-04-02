@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { untrack } from 'svelte';
   import AppSidebar from '$lib/components/shell/AppSidebar.svelte';
   import AppTopbar from '$lib/components/shell/AppTopbar.svelte';
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
@@ -8,6 +9,24 @@
   import { stockTotal, loadScreener, selectStock } from '$lib/stores/stockData';
 
   let { children } = $props();
+
+  function closeDetailPanel() {
+    selectedTicker.set(null);
+    companyData.set(null);
+    chartData.set([]);
+    activeTab.set('overview');
+  }
+
+  // Close the detail panel when the route changes
+  let prevPath: string | null = null;
+  $effect(() => {
+    const cur = $page.url.pathname;
+    const prev = untrack(() => prevPath);
+    prevPath = cur;
+    if (prev !== null && prev !== cur) {
+      untrack(() => closeDetailPanel());
+    }
+  });
 
   const PANEL_WIDTH_KEY = 'stonklens-panel-width';
   let panelWidth = $state((() => {
@@ -60,6 +79,8 @@
   </div>
 
   {#if $selectedTicker}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="detail-backdrop" onclick={closeDetailPanel}></div>
     <div class="detail-overlay" style="width:{panelWidth}px">
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="resize-handle" onmousedown={onResize}></div>
@@ -86,6 +107,11 @@
     flex: 1;
     position: relative;
     overflow: hidden;
+  }
+  .detail-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 69;
   }
   .detail-overlay {
     position: fixed;
