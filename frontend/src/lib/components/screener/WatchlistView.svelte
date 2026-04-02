@@ -2,6 +2,7 @@
 	import type { StockRow } from '$lib/api/types';
 	import { watchlist } from '$lib/stores/watchlist';
 	import { fmtLarge, fmtSignPct, fmt } from '$lib/utils/format';
+	import PctBadge from '$lib/components/shared/PctBadge.svelte';
 
 	let { stocks, onSelect, selectedTicker }: {
 		stocks: StockRow[];
@@ -37,6 +38,8 @@
 						<th>Name / Ticker</th>
 						<th>Price</th>
 						<th class="text-right">1D % Chg</th>
+						<th class="text-right">1W % Chg</th>
+						<th class="text-right">1M % Chg</th>
 						<th class="text-right">1Y % Chg</th>
 						<th class="text-right">MCAP</th>
 						<th class="text-right">P/E</th>
@@ -62,22 +65,14 @@
 								</div>
 							</td>
 							<td class="mono">{s.price != null ? s.price.toFixed(2) : '—'}</td>
-							<td class="mono text-right">
-								{#if s.change_pct != null}
-									<span class="pct-badge" class:pct-positive={s.change_pct >= 0} class:pct-negative={s.change_pct < 0}>
-										{fmtSignPct(s.change_pct)}
-									</span>
-								{:else}
-									<span class="text-dim">—</span>
-								{/if}
-							</td>
-							<td class="mono text-right" class:text-green={s.perf_1y != null && s.perf_1y >= 0} class:text-red={s.perf_1y != null && s.perf_1y < 0}>
-								{fmtSignPct(s.perf_1y)}
-							</td>
+							<td class="mono text-right"><PctBadge value={s.change_pct} /></td>
+							<td class="mono text-right"><PctBadge value={s.perf_1w} /></td>
+							<td class="mono text-right"><PctBadge value={s.perf_1m} /></td>
+							<td class="mono text-right"><PctBadge value={s.perf_1y} /></td>
 							<td class="mono text-right text-dim">{fmtLarge(s.market_cap)}</td>
 							<td class="mono text-right">{fmt(s.pe, 1)}</td>
-							<td class="mono text-right">{s.div_yield != null ? s.div_yield.toFixed(2) + '%' : '—'}</td>
-							<td class="mono text-right" class:text-cyan={s.roe != null}>{s.roe != null ? s.roe.toFixed(1) + '%' : '—'}</td>
+							<td class="mono text-right" class:text-green={s.div_yield != null && s.div_yield > 0}>{s.div_yield != null ? s.div_yield.toFixed(2) + '%' : '—'}</td>
+							<td class="mono text-right" class:text-green={s.roe != null && s.roe >= 0} class:text-red={s.roe != null && s.roe < 0}>{s.roe != null ? s.roe.toFixed(1) + '%' : '—'}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -189,15 +184,6 @@
 	.text-green { color: var(--positive); font-weight: 700; }
 	.text-red { color: var(--negative); font-weight: 700; }
 	.text-cyan { color: var(--accent-soft); font-weight: 700; }
-	.pct-badge {
-		display: inline-block;
-		padding: 2px 8px;
-		font-size: 12px;
-		font-weight: 700;
-	}
-	.pct-positive { background: rgba(1, 245, 160, 0.1); color: var(--positive); }
-	.pct-negative { background: rgba(147, 0, 10, 0.1); color: var(--negative); }
-
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 	}

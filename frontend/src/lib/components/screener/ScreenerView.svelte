@@ -4,6 +4,7 @@
 	import { getSectors, getCountries, getSectorAverages, type SectorAverages } from '$lib/api/client';
 	import { watchlist } from '$lib/stores/watchlist';
 	import { fmtLarge, fmtSignPct, fmt } from '$lib/utils/format';
+	import PctBadge from '$lib/components/shared/PctBadge.svelte';
 	import { visibleColumns, ALL_COLUMNS, LOCKED_COLUMNS, PRESETS, type ColumnKey } from '$lib/stores/columns';
 
 	let { stocks, total, onFilter, onSelect, selectedTicker, onLoadMore, onSort, onExport, loading, hasMore }: {
@@ -79,6 +80,8 @@
 		{ key: 'name', label: 'Name / Ticker' },
 		{ key: 'price', label: 'Price' },
 		{ key: 'change_pct', label: '1D % Chg', align: 'right' },
+		{ key: 'perf_1w', label: '1W % Chg', align: 'right' },
+		{ key: 'perf_1m', label: '1M % Chg', align: 'right' },
 		{ key: 'perf_1y', label: '1Y % Chg', align: 'right' },
 		{ key: 'market_cap', label: 'MCAP', align: 'right' },
 		{ key: 'pe', label: 'P/E', align: 'right' },
@@ -187,24 +190,16 @@
 							</div>
 						</td>
 						<td class="mono">{s.price != null ? s.price.toFixed(2) : '—'}</td>
-						<td class="mono text-right">
-							{#if s.change_pct != null}
-								<span class="pct-badge" class:pct-positive={s.change_pct >= 0} class:pct-negative={s.change_pct < 0}>
-									{fmtSignPct(s.change_pct)}
-								</span>
-							{:else}
-								<span class="text-dim">—</span>
-							{/if}
-						</td>
-						<td class="mono text-right" class:text-green={s.perf_1y != null && s.perf_1y >= 0} class:text-red={s.perf_1y != null && s.perf_1y < 0}>
-							{fmtSignPct(s.perf_1y)}
-						</td>
+						<td class="mono text-right"><PctBadge value={s.change_pct} /></td>
+						<td class="mono text-right"><PctBadge value={s.perf_1w} /></td>
+						<td class="mono text-right"><PctBadge value={s.perf_1m} /></td>
+						<td class="mono text-right"><PctBadge value={s.perf_1y} /></td>
 						<td class="mono text-right text-dim">{fmtLarge(s.market_cap)}</td>
 						<td class="mono text-right">{fmt(s.pe, 1)}</td>
 						<td class="mono text-right">{fmt(s.ps, 1)}</td>
 						<td class="mono text-right">{fmt(s.pb, 1)}</td>
-						<td class="mono text-right">{s.div_yield != null ? s.div_yield.toFixed(2) + '%' : '—'}</td>
-						<td class="mono text-right" class:text-cyan={s.roe != null}>{s.roe != null ? s.roe.toFixed(1) + '%' : '—'}</td>
+						<td class="mono text-right" class:text-green={s.div_yield != null && s.div_yield > 0}>{s.div_yield != null ? s.div_yield.toFixed(2) + '%' : '—'}</td>
+						<td class="mono text-right" class:text-green={s.roe != null && s.roe >= 0} class:text-red={s.roe != null && s.roe < 0}>{s.roe != null ? s.roe.toFixed(1) + '%' : '—'}</td>
 					</tr>
 				{/each}
 				{#if loading}
@@ -478,15 +473,6 @@
 	.text-green { color: var(--positive); font-weight: 700; }
 	.text-red { color: var(--negative); font-weight: 700; }
 	.text-cyan { color: var(--accent-soft); font-weight: 700; }
-	.pct-badge {
-		display: inline-block;
-		padding: 2px 8px;
-		font-size: 12px;
-		font-weight: 700;
-	}
-	.pct-positive { background: var(--accent-dim); color: var(--positive); }
-	.pct-negative { background: var(--accent-dim); color: var(--negative); }
-
 	.skeleton-row td { padding: 16px; }
 	.skeleton {
 		height: 16px;

@@ -248,6 +248,8 @@
 					<tr>
 						<th>Ticker</th>
 						<th>1D %</th>
+						<th>1W %</th>
+						<th>1M %</th>
 						<th>1Y %</th>
 						<th>Div Yield</th>
 						<th>P/E</th>
@@ -271,14 +273,20 @@
 							<td class:text-green={s.change_pct != null && s.change_pct >= 0} class:text-red={s.change_pct != null && s.change_pct < 0}>
 								{formatPct(s.change_pct)}
 							</td>
+							<td class:text-green={s.perf_1w != null && s.perf_1w >= 0} class:text-red={s.perf_1w != null && s.perf_1w < 0}>
+								{formatPct(s.perf_1w)}
+							</td>
+							<td class:text-green={s.perf_1m != null && s.perf_1m >= 0} class:text-red={s.perf_1m != null && s.perf_1m < 0}>
+								{formatPct(s.perf_1m)}
+							</td>
 							<td class:text-green={s.perf_1y != null && s.perf_1y >= 0} class:text-red={s.perf_1y != null && s.perf_1y < 0}>
 								{formatPct(s.perf_1y)}
 							</td>
-							<td>{s.div_yield != null ? `${s.div_yield.toFixed(2)}%` : 'N/A'}</td>
+							<td class:text-green={s.div_yield != null && s.div_yield > 0}>{s.div_yield != null ? `${s.div_yield.toFixed(2)}%` : 'N/A'}</td>
 							<td>{s.pe != null ? `${s.pe.toFixed(1)}x` : 'N/A'}</td>
 							<td>{s.ps != null ? `${s.ps.toFixed(1)}x` : 'N/A'}</td>
 							<td class="text-right">{formatMcap(s.market_cap)}</td>
-							<td class="text-right text-cyan">{s.roe != null ? `${s.roe.toFixed(1)}%` : 'N/A'}</td>
+							<td class="text-right" class:text-green={s.roe != null && s.roe >= 0} class:text-red={s.roe != null && s.roe < 0}>{s.roe != null ? `${s.roe.toFixed(1)}%` : 'N/A'}</td>
 						</tr>
 					{/each}
 				</tbody>

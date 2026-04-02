@@ -10,6 +10,8 @@ export const ALL_COLUMNS = [
 	{ key: 'name', label: 'Name', group: 'Core' },
 	{ key: 'ticker', label: 'Ticker', group: 'Core' },
 	{ key: 'change_pct', label: '1d Change', group: 'Performance' },
+	{ key: 'perf_1w', label: '1w Change', group: 'Performance' },
+	{ key: 'perf_1m', label: '1m Change', group: 'Performance' },
 	{ key: 'perf_1y', label: '1y Change', group: 'Performance' },
 	{ key: 'price', label: 'Price', group: 'Core' },
 	{ key: 'market_cap', label: 'Market Cap', group: 'Core' },
@@ -27,7 +29,7 @@ export const ALL_COLUMNS = [
 export type ColumnKey = (typeof ALL_COLUMNS)[number]['key'];
 
 const DEFAULT_VISIBLE: ColumnKey[] = [
-	'name', 'ticker', 'change_pct', 'perf_1y', 'div_yield',
+	'name', 'ticker', 'change_pct', 'perf_1w', 'perf_1m', 'perf_1y', 'div_yield',
 	'pe', 'ps', 'pb', 'price', 'report_quarter', 'sector',
 	'ev_ebitda', 'roe', 'margin', 'market_cap',
 ];
@@ -43,7 +45,7 @@ export const PRESETS: Record<string, { label: string; columns: ColumnKey[] }> = 
 	},
 	performance: {
 		label: 'Performance',
-		columns: ['name', 'ticker', 'price', 'change_pct', 'perf_1y', 'roe', 'margin', 'market_cap'],
+		columns: ['name', 'ticker', 'price', 'change_pct', 'perf_1w', 'perf_1m', 'perf_1y', 'roe', 'margin', 'market_cap'],
 	},
 	compact: {
 		label: 'Compact',
