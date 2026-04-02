@@ -1,12 +1,11 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import AppSidebar from '$lib/components/shell/AppSidebar.svelte';
   import AppTopbar from '$lib/components/shell/AppTopbar.svelte';
   import DetailPanel from '$lib/components/detail/DetailPanel.svelte';
   import { selectedTicker, companyData, chartData, activeTab } from '$lib/stores/screener';
-  import { stockTotal, loadScreener, selectStock } from '$lib/stores/stockData';
+  import { stockTotal, selectStock } from '$lib/stores/stockData';
 
   let { children } = $props();
 
@@ -37,13 +36,6 @@
     return Math.round(window.innerWidth * 2 / 5);
   })());
 
-  async function handleGlobalSearch(query: string) {
-    if ($page.url.pathname !== '/screener') {
-      await goto('/screener');
-    }
-    loadScreener({ country: null, sector: '', search: query });
-  }
-
   function onResize(e: MouseEvent) {
     e.preventDefault();
     document.body.style.cursor = 'col-resize';
@@ -72,7 +64,7 @@
   <AppSidebar />
 
   <div class="main-area">
-    <AppTopbar total={$stockTotal} onSearch={handleGlobalSearch} />
+    <AppTopbar total={$stockTotal} />
     <div class="content">
       {@render children()}
     </div>

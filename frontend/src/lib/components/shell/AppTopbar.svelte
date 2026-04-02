@@ -3,14 +3,10 @@
 	import { theme } from '$lib/stores/theme';
 	import { getLastUpdated } from '$lib/api/client';
 
-	let { total = 0, onSearch }: {
+	let { total = 0 }: {
 		total?: number;
-		onSearch?: (query: string) => void;
 	} = $props();
 
-	let search = $state('');
-	let searchFocused = $state(false);
-	let searchTimeout: ReturnType<typeof setTimeout>;
 	let lastUpdated = $state<string | null>(null);
 
 	function timeAgo(iso: string): string {
@@ -26,32 +22,13 @@
 
 	let updatedLabel = $derived(lastUpdated ? timeAgo(lastUpdated) : null);
 
-	function handleSearch() {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			onSearch?.(search);
-		}, 300);
-	}
-
 	onMount(async () => {
 		lastUpdated = await getLastUpdated();
 	});
 </script>
 
 <header class="topbar">
-	<div class="topbar-left">
-		<div class="search-box" class:focused={searchFocused}>
-			<span class="material-symbols-outlined search-icon">search</span>
-			<input
-				type="text"
-				placeholder="TICKER, ISIN, SECTOR..."
-				bind:value={search}
-				oninput={handleSearch}
-				onfocus={() => searchFocused = true}
-				onblur={() => searchFocused = false}
-			/>
-		</div>
-	</div>
+	<div class="topbar-left"></div>
 
 	<div class="topbar-right">
 		<div class="topbar-actions">
@@ -87,46 +64,6 @@
 		background: var(--topbar-bg);
 		flex-shrink: 0;
 		z-index: 50;
-	}
-
-	.topbar-left {
-		display: flex;
-		align-items: center;
-		gap: 32px;
-	}
-
-	.search-box {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		background: var(--sidebar-bg);
-		padding: 0 16px;
-		height: 36px;
-		border: 1px solid var(--border-subtle);
-		transition: all 0.2s;
-	}
-	.search-box.focused {
-		border-color: var(--accent);
-		box-shadow: 0 0 0 1px var(--accent-dim);
-	}
-	.search-icon {
-		font-size: 16px;
-		color: var(--accent);
-	}
-	.search-box input {
-		background: none;
-		border: none;
-		color: var(--text);
-		font-family: var(--font-mono);
-		font-size: 12px;
-		width: 240px;
-		outline: none;
-		letter-spacing: 0.05em;
-	}
-	.search-box input::placeholder {
-		color: var(--text-dim);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
 	}
 
 	.topbar-right {

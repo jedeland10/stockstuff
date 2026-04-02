@@ -67,14 +67,13 @@
 		<div class="nav-left">
 			<span class="nav-logo">StockLens</span>
 			<div class="nav-links">
-				<a class="nav-link nav-link--active" href="/">Markets</a>
-				<a class="nav-link" href="/">News</a>
-				<a class="nav-link" href="/">Watchlist</a>
+				<a class="nav-link" href="/screener">Screener</a>
+				<a class="nav-link" href="/rankings">Rankings</a>
+				<a class="nav-link" href="/watchlist">Watchlist</a>
 			</div>
 		</div>
 		<div class="nav-right">
-			<button class="nav-signin">Sign In</button>
-			<a href="/dashboard" class="nav-cta">Get Started</a>
+			<a href="/dashboard" class="nav-cta">Open Dashboard</a>
 		</div>
 	</nav>
 
@@ -85,17 +84,17 @@
 				<div class="hero-text">
 					<div class="hero-badge">
 						<span class="badge-dot"></span>
-						<span class="badge-label">Live Market Feed Active</span>
+						<span class="badge-label">Tracking {tickers.length}+ Nordic Stocks</span>
 					</div>
 					<h1 class="hero-title">
-						See the Market <br /><span class="hero-title-white">Clearly.</span>
+						Nordic Stock <br /><span class="hero-title-white">Intelligence.</span>
 					</h1>
 					<p class="hero-subtitle">
-						Real-time precision and powerful visual data for the modern investor. Engineered for those who trade on intelligence, not intuition.
+						Screen, score, and track stocks across Sweden, Denmark, Finland, and Norway. Fundamentals, price history, and proven scoring models — all in one place.
 					</p>
 					<div class="hero-buttons">
-						<a href="/dashboard" class="btn-primary-green">Start Analyzing</a>
-						<button class="btn-outline">View Live Demo</button>
+						<a href="/dashboard" class="btn-primary-green">Open Dashboard</a>
+						<a href="/screener" class="btn-outline">Browse Screener</a>
 					</div>
 				</div>
 				<div class="hero-visual">
@@ -121,60 +120,50 @@
 							{/each}
 						</svg>
 						<div class="chart-overlay">
-							<span class="chart-label">VOLATILITY INDEX</span>
-							<span class="chart-value">18.42 <span class="chart-change">&#9650; 2.1%</span></span>
+							<span class="chart-label">NORDIC MARKETS</span>
+							<span class="chart-value">SE · DK · FI · NO</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</section>
 
-		<!-- Market Sentiment -->
+		<!-- What's Included -->
 		<section class="sentiment-section">
 			<div class="section-container">
 				<div class="section-header">
 					<div>
-						<span class="section-tag">Intelligence Hub</span>
-						<h2 class="section-title">Market Sentiment</h2>
-					</div>
-					<div class="section-dots">
-						<div class="dot dot--active"></div>
-						<div class="dot"></div>
+						<span class="section-tag">What You Get</span>
+						<h2 class="section-title">Built for Nordic Markets</h2>
 					</div>
 				</div>
 				<div class="sentiment-grid">
 					<div class="sentiment-card sentiment-card--glass">
 						<div class="sentiment-top">
-							<span class="material-symbols-outlined sentiment-icon sentiment-icon--green">trending_up</span>
-							<span class="sentiment-badge">GLOBAL INDEX</span>
+							<span class="material-symbols-outlined sentiment-icon sentiment-icon--green">filter_list</span>
+							<span class="sentiment-badge">SCREENER</span>
 						</div>
-						<h3 class="sentiment-title">Bullish Momentum</h3>
-						<p class="sentiment-desc">Aggregate sentiment across top 500 equities suggests strong buy pressure in tech and energy sectors.</p>
-						<div class="sentiment-bar"><div class="sentiment-fill sentiment-fill--green" style="width: 78%"></div></div>
-						<span class="sentiment-label sentiment-label--green">78% CONFIDENCE LEVEL</span>
+						<h3 class="sentiment-title">Stock Screener</h3>
+						<p class="sentiment-desc">Filter and sort Nordic stocks by country, sector, valuation, and performance. Track 1-day, 1-week, 1-month, and 1-year returns side by side.</p>
 					</div>
 					<div class="sentiment-card sentiment-card--solid">
 						<div class="sentiment-hover-bg"></div>
 						<div class="sentiment-card-inner">
 							<div class="sentiment-top">
-								<span class="material-symbols-outlined sentiment-icon sentiment-icon--cyan">query_stats</span>
-								<span class="sentiment-badge">CRYPTO ASSETS</span>
+								<span class="material-symbols-outlined sentiment-icon sentiment-icon--cyan">leaderboard</span>
+								<span class="sentiment-badge">SCORING</span>
 							</div>
-							<h3 class="sentiment-title">Neutral Consolidation</h3>
-							<p class="sentiment-desc">Digital assets maintain sideways movement within Fibonacci support zones. Volatility remains low.</p>
-							<div class="sentiment-bar sentiment-bar--dark"><div class="sentiment-fill sentiment-fill--cyan" style="width: 45%"></div></div>
-							<span class="sentiment-label sentiment-label--cyan">45% ACCUMULATION</span>
+							<h3 class="sentiment-title">Investment Scores</h3>
+							<p class="sentiment-desc">Rank stocks using Piotroski F-Score, Magic Formula, and Graham Number. Quantitative scoring models used by value investors worldwide.</p>
 						</div>
 					</div>
 					<div class="sentiment-card sentiment-card--glass">
 						<div class="sentiment-top">
-							<span class="material-symbols-outlined sentiment-icon sentiment-icon--red">warning</span>
-							<span class="sentiment-badge">RISK ASSESSMENT</span>
+							<span class="material-symbols-outlined sentiment-icon sentiment-icon--red">candlestick_chart</span>
+							<span class="sentiment-badge">CHARTS & DATA</span>
 						</div>
-						<h3 class="sentiment-title">Macro Headwinds</h3>
-						<p class="sentiment-desc">Yield curve fluctuations indicating potential short-term liquidity tightening in emerging markets.</p>
-						<div class="sentiment-bar"><div class="sentiment-fill sentiment-fill--red" style="width: 12%"></div></div>
-						<span class="sentiment-label sentiment-label--red">12% BULLISH STRENGTH</span>
+						<h3 class="sentiment-title">Fundamentals & Charts</h3>
+						<p class="sentiment-desc">Up to 10 years of price history with candlestick charts, moving averages, and annual financials including revenue, EPS, margins, and balance sheet data.</p>
 					</div>
 				</div>
 			</div>
@@ -184,27 +173,27 @@
 		<section class="features-section">
 			<div class="section-container features-grid">
 				<div class="features-left">
-					<h2 class="features-heading">Precision <br /><span class="features-heading-accent">Tooling.</span></h2>
-					<p class="features-desc">We provide the hardware for your financial strategy. No fluff, just raw execution capabilities.</p>
+					<h2 class="features-heading">How It <br /><span class="features-heading-accent">Works.</span></h2>
+					<p class="features-desc">Data is fetched from public financial APIs, stored in PostgreSQL, and refreshed throughout the trading day.</p>
 					<div class="features-checks">
 						<div class="feature-check">
 							<span class="material-symbols-outlined feature-check-icon">check_circle</span>
-							<span class="feature-check-text">Latency-optimized data</span>
+							<span class="feature-check-text">Updated every 3 hours during market hours</span>
 						</div>
 						<div class="feature-check">
 							<span class="material-symbols-outlined feature-check-icon">check_circle</span>
-							<span class="feature-check-text">Institutional-grade logic</span>
+							<span class="feature-check-text">Covers SE, DK, FI, and NO exchanges</span>
 						</div>
 					</div>
 				</div>
 				<div class="features-right">
 					<div class="feature-card feature-card--cyan">
 						<div class="feature-icon-wrap feature-icon-wrap--cyan">
-							<span class="material-symbols-outlined feature-icon-glyph feature-icon-glyph--cyan">psychology</span>
+							<span class="material-symbols-outlined feature-icon-glyph feature-icon-glyph--cyan">dashboard</span>
 						</div>
 						<div>
-							<h4 class="feature-card-title">AI Alerts</h4>
-							<p class="feature-card-desc">Neural networks scan thousands of tickers per second to identify pattern breakouts before they hit the retail news cycle.</p>
+							<h4 class="feature-card-title">Dashboard</h4>
+							<p class="feature-card-desc">See today's top gainers and losers, sector sentiment by period, and your portfolio-level scoring highlights at a glance.</p>
 						</div>
 					</div>
 					<div class="feature-card feature-card--green">
@@ -212,17 +201,17 @@
 							<span class="material-symbols-outlined feature-icon-glyph feature-icon-glyph--green">analytics</span>
 						</div>
 						<div>
-							<h4 class="feature-card-title">Deep Analysis</h4>
-							<p class="feature-card-desc">Go beyond simple charts. Access order flow, dark pool volume, and sentiment heatmaps in a single unified interface.</p>
+							<h4 class="feature-card-title">Deep Dive</h4>
+							<p class="feature-card-desc">Click any stock to see detailed financials, key ratios, historical charts, and investment scores — all in a side panel without leaving the screener.</p>
 						</div>
 					</div>
 					<div class="feature-card feature-card--gold">
 						<div class="feature-icon-wrap feature-icon-wrap--gold">
-							<span class="material-symbols-outlined feature-icon-glyph feature-icon-glyph--gold">public</span>
+							<span class="material-symbols-outlined feature-icon-glyph feature-icon-glyph--gold">visibility</span>
 						</div>
 						<div>
-							<h4 class="feature-card-title">Global Watchlist</h4>
-							<p class="feature-card-desc">Sync your tactical assets across all markets—equities, crypto, forex, and commodities—with cross-asset correlation tracking.</p>
+							<h4 class="feature-card-title">Watchlist</h4>
+							<p class="feature-card-desc">Star stocks you're interested in and track them in a dedicated view. Your watchlist is saved locally so it's always there when you come back.</p>
 						</div>
 					</div>
 				</div>
@@ -234,12 +223,12 @@
 			<div class="cta-container">
 				<div class="cta-glow"></div>
 				<div class="cta-content">
-					<h2 class="cta-title">Ready to master the void?</h2>
-					<p class="cta-desc">Join 50,000+ tactical investors using StockLens to filter the noise and capture the alpha.</p>
-					<form class="cta-form" onsubmit={(e) => e.preventDefault()}>
-						<input type="email" placeholder="terminal@access.io" class="cta-input" />
-						<button type="submit" class="cta-btn">Request Access</button>
-					</form>
+					<h2 class="cta-title">Start exploring Nordic markets.</h2>
+					<p class="cta-desc">No sign-up required. Open the dashboard and start screening stocks right away.</p>
+					<div class="hero-buttons" style="justify-content: center;">
+						<a href="/dashboard" class="btn-primary-green">Open Dashboard</a>
+						<a href="/screener" class="btn-outline">Go to Screener</a>
+					</div>
 				</div>
 			</div>
 		</section>
@@ -249,13 +238,13 @@
 	<footer class="landing-footer">
 		<div class="footer-left">
 			<span class="nav-logo">StockLens</span>
-			<p class="footer-copy">&copy; 2024 StockLens. Powered by Real-Time Data.</p>
+			<p class="footer-copy">&copy; 2025 StockLens. Nordic stock data updated throughout the trading day.</p>
 		</div>
 		<div class="footer-links">
-			<a href="/">Terms</a>
-			<a href="/">Privacy</a>
-			<a href="/">API Docs</a>
-			<a href="/">Support</a>
+			<a href="/dashboard">Dashboard</a>
+			<a href="/screener">Screener</a>
+			<a href="/rankings">Rankings</a>
+			<a href="/watchlist">Watchlist</a>
 		</div>
 	</footer>
 
@@ -324,10 +313,8 @@
 	.feature-card-title,
 	.cta-title,
 	.nav-cta,
-	.nav-signin,
 	.btn-primary-green,
 	.btn-outline,
-	.cta-btn,
 	.feature-check-text,
 	:global(.landing-root .nav-link) {
 		font-family: 'Manrope', system-ui, sans-serif;
@@ -338,8 +325,6 @@
 	.chart-value,
 	.section-tag,
 	.sentiment-badge,
-	.sentiment-label,
-	.cta-input,
 	.ticker-symbol,
 	.ticker-price {
 		font-family: 'JetBrains Mono', monospace;
@@ -386,16 +371,6 @@
 		border-bottom: 2px solid var(--cyan-soft);
 		padding-bottom: 4px;
 	}
-	.nav-signin {
-		padding: 8px 20px;
-		background: none;
-		border: none;
-		color: var(--cyan-soft);
-		font-weight: 700;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-	.nav-signin:hover { background: rgba(164, 230, 255, 0.05); }
 	.nav-cta {
 		display: inline-block;
 		padding: 8px 20px;
@@ -575,10 +550,6 @@
 		letter-spacing: -0.02em;
 		color: #fff;
 	}
-	.section-dots { display: flex; gap: 8px; }
-	.dot { height: 4px; width: 48px; background: var(--surface-highest); }
-	.dot--active { background: var(--cyan-soft); }
-
 	.sentiment-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
@@ -637,24 +608,6 @@
 		line-height: 1.6;
 		margin-bottom: 24px;
 	}
-	.sentiment-bar {
-		width: 100%;
-		height: 4px;
-		background: var(--surface);
-	}
-	.sentiment-bar--dark { background: var(--surface-highest); }
-	.sentiment-fill { height: 100%; }
-	.sentiment-fill--green { background: var(--green); }
-	.sentiment-fill--cyan { background: var(--cyan-soft); }
-	.sentiment-fill--red { background: var(--red); }
-	.sentiment-label {
-		display: block;
-		margin-top: 8px;
-		font-size: 10px;
-	}
-	.sentiment-label--green { color: var(--green-soft); }
-	.sentiment-label--cyan { color: var(--cyan-soft); }
-	.sentiment-label--red { color: var(--red); }
 
 	/* ===== Features ===== */
 	.features-section { padding: 96px 48px; background: var(--void); }
@@ -752,33 +705,6 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
-	.cta-form {
-		display: inline-flex;
-		padding: 4px;
-		background: var(--surface-highest);
-	}
-	.cta-input {
-		background: transparent;
-		border: none;
-		outline: none;
-		color: #fff;
-		padding: 12px 24px;
-		width: 256px;
-		font-size: 0.875rem;
-	}
-	.cta-input::placeholder { color: var(--muted); }
-	.cta-btn {
-		padding: 12px 32px;
-		background: var(--cyan-soft);
-		color: var(--on-primary);
-		font-family: 'Manrope', system-ui, sans-serif;
-		font-weight: 700;
-		font-size: 0.875rem;
-		border: none;
-		cursor: pointer;
-		transition: transform 0.1s;
-	}
-	.cta-btn:active { transform: scale(0.95); }
 
 	/* ===== Footer ===== */
 	.landing-footer {
