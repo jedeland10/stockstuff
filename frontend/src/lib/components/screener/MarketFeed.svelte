@@ -170,29 +170,29 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background: #111417;
+    background: var(--bg);
   }
 
   /* Header */
   .hl-header {
     padding: 24px 32px 16px;
-    border-left: 4px solid #00d1ff;
+    border-left: 4px solid var(--accent);
     margin: 32px 32px 0;
   }
   .hl-title {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: var(--font-heading);
     font-size: 2rem;
     font-weight: 900;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: #e1e2e7;
+    color: var(--text);
     margin-bottom: 8px;
   }
   .hl-sub {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     letter-spacing: 0.1em;
-    color: #64748b;
+    color: var(--text-faint);
   }
 
   /* Scroll area */
@@ -211,7 +211,7 @@
 
   /* Cards */
   .hl-card {
-    background: #191c1f;
+    background: var(--bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
     overflow: hidden;
@@ -223,7 +223,7 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     color: rgba(1, 245, 160, 0.3);
   }
@@ -237,38 +237,38 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
   .hl-card-title {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: var(--font-heading);
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #e1e2e7;
+    color: var(--text);
   }
   .hl-card-meta {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
-    color: #64748b;
+    color: var(--text-faint);
   }
   .hl-icon { font-size: 16px; }
-  .hl-icon--green { color: #01f5a0; }
-  .hl-icon--red { color: #ffb4ab; }
+  .hl-icon--green { color: var(--positive); }
+  .hl-icon--red { color: var(--negative); }
 
   /* Table */
   .hl-table {
     width: 100%;
     border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
   }
   .hl-table thead {
-    background: #0b0e11;
+    background: var(--sidebar-bg);
   }
   .hl-table th {
     padding: 12px 16px;
     font-weight: 400;
     font-size: 10px;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--text-faint);
   }
   .hl-table tbody tr {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -278,21 +278,21 @@
   .hl-table tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
   .hl-table td {
     padding: 12px 16px;
-    color: #e1e2e7;
+    color: var(--text);
   }
   .ticker-link {
-    color: #a4e6ff;
+    color: var(--accent-soft);
     font-weight: 700;
   }
   .ticker-name {
     font-size: 10px;
-    color: #64748b;
+    color: var(--text-faint);
     margin-left: 8px;
   }
   .text-right { text-align: right; }
-  .text-green { color: #01f5a0; font-weight: 700; }
-  .text-red { color: #ffb4ab; font-weight: 700; }
-  .text-dim { color: #64748b; }
+  .text-green { color: var(--positive); font-weight: 700; }
+  .text-red { color: var(--negative); font-weight: 700; }
+  .text-dim { color: var(--text-faint); }
 
   /* Reports */
   .report-list {
@@ -319,27 +319,27 @@
   .report-row:hover { background: rgba(255, 255, 255, 0.05); }
   .report-info { display: flex; flex-direction: column; gap: 4px; }
   .report-ticker {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 700;
-    color: #a4e6ff;
+    color: var(--accent-soft);
     text-transform: uppercase;
   }
   .report-name {
     font-size: 10px;
-    color: #64748b;
+    color: var(--text-faint);
   }
   .report-price { text-align: right; }
   .report-price-label {
     display: block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
-    color: #64748b;
+    color: var(--text-faint);
   }
   .report-price-val {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
-    color: #e1e2e7;
+    color: var(--text);
   }
 
   /* Sector Heatmap */
@@ -355,27 +355,27 @@
     margin-bottom: 8px;
   }
   .sector-name {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     letter-spacing: 0.05em;
   }
   .sector-change {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
   }
   .sector-bar-track {
     height: 8px;
-    background: #0b0e11;
+    background: var(--sidebar-bg);
     display: flex;
   }
   .sector-bar {
     height: 100%;
     min-width: 2px;
   }
-  .sector-bar--green { background: #01f5a0; }
-  .sector-bar--red { background: #ffb4ab; }
+  .sector-bar--green { background: var(--positive); }
+  .sector-bar--red { background: var(--negative); }
 
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

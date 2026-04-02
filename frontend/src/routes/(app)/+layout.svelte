@@ -94,7 +94,7 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
-    background: #111417;
+    background: var(--bg);
   }
   .main-area {
     flex: 1;

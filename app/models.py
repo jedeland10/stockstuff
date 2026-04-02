@@ -17,6 +17,8 @@ class StockRow(BaseModel):
     roe: Optional[float] = None
     margin: Optional[float] = None
     market_cap: Optional[float] = None
+    perf_1w: Optional[float] = None
+    perf_1m: Optional[float] = None
     perf_1y: Optional[float] = None
     report_quarter: Optional[str] = None
     industry: Optional[str] = None

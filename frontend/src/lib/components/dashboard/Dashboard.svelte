@@ -28,10 +28,42 @@
 		return `${val >= 0 ? '+' : ''}${val.toFixed(2)}%`;
 	}
 
-	function sentimentLabel(change: number): string {
-		if (change > 1) return 'BULLISH SENTIMENT';
-		if (change > 0) return 'NEUTRAL SENTIMENT';
-		return 'BEARISH SENTIMENT';
+	type SectorPeriod = '1d' | '1w' | '1m' | '1y';
+	type SectorSentiment = { sector: string; avgChange: number; breadth: number; count: number; label: string };
+
+	let sectorPeriod = $state<SectorPeriod>('1d');
+
+	function getChangeForPeriod(s: StockRow, period: SectorPeriod): number | null {
+		switch (period) {
+			case '1d': return s.change_pct;
+			case '1w': return s.perf_1w;
+			case '1m': return s.perf_1m;
+			case '1y': return s.perf_1y;
+		}
+	}
+
+	function computeSectorSentiment(stocks: StockRow[], period: SectorPeriod): SectorSentiment[] {
+		const grouped: Record<string, { changes: number[]; total: number }> = {};
+		for (const s of stocks) {
+			const change = getChangeForPeriod(s, period);
+			if (!s.sector || change == null) continue;
+			if (!grouped[s.sector]) grouped[s.sector] = { changes: [], total: 0 };
+			grouped[s.sector].changes.push(change);
+			grouped[s.sector].total++;
+		}
+		return Object.entries(grouped)
+			.filter(([, v]) => v.total >= 3)
+			.map(([sector, { changes, total }]) => {
+				const avgChange = changes.reduce((a, b) => a + b, 0) / changes.length;
+				const advancing = changes.filter(c => c > 0).length;
+				const breadth = advancing / total;
+				let label: string;
+				if (avgChange > 0 && breadth > 0.5) label = 'BULLISH';
+				else if (avgChange < 0 && breadth < 0.5) label = 'BEARISH';
+				else label = 'MIXED';
+				return { sector, avgChange, breadth, count: total, label };
+			})
+			.sort((a, b) => Math.abs(b.avgChange) - Math.abs(a.avgChange));
 	}
 
 	onMount(async () => {
@@ -56,19 +88,9 @@
 		topByMcap = stocks.slice(0, 5);
 	});
 
-	// Top 4 sectors by absolute change
+	// Top 4 sectors by absolute change for selected period
 	let topSectors = $derived.by(() => {
-		const entries = Object.entries(sectorAvgs);
-		if (entries.length === 0) return [];
-		return entries
-			.filter(([, v]) => v.pe != null)
-			.sort((a, b) => Math.abs(b[1].roe ?? 0) - Math.abs(a[1].roe ?? 0))
-			.slice(0, 4)
-			.map(([sector, data]) => {
-				// Use margin as a proxy for sector "change" since we don't have sector-level daily change
-				const change = data.margin ?? 0;
-				return { sector, change, data };
-			});
+		return computeSectorSentiment(stocks, sectorPeriod).slice(0, 4);
 	});
 </script>
 
@@ -139,12 +161,12 @@
 			</div>
 			<div class="summary-sparkline">
 				<svg viewBox="0 0 100 40" class="sparkline-svg">
-					<path d="M0 35 L10 32 L20 34 L30 28 L40 25 L50 20 L60 22 L70 15 L80 18 L90 5 L100 10" fill="none" stroke="#00d1ff" stroke-width="2" />
+					<path d="M0 35 L10 32 L20 34 L30 28 L40 25 L50 20 L60 22 L70 15 L80 18 L90 5 L100 10" fill="none" stroke="var(--accent)" stroke-width="2" />
 					<path d="M0 35 L10 32 L20 34 L30 28 L40 25 L50 20 L60 22 L70 15 L80 18 L90 5 L100 10 L100 40 L0 40 Z" fill="url(#sparkGrad)" />
 					<defs>
 						<linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-							<stop offset="0%" stop-color="#00d1ff" stop-opacity="0.2" />
-							<stop offset="100%" stop-color="#00d1ff" stop-opacity="0" />
+							<stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2" />
+							<stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
 						</linearGradient>
 					</defs>
 				</svg>
@@ -158,17 +180,23 @@
 		<div class="sector-matrix">
 			<div class="section-bar">
 				<h3 class="section-label">Sector Intelligence Matrix</h3>
+				<div class="period-toggle">
+					{#each (['1d', '1w', '1m', '1y'] as const) as p}
+						<button class="period-btn" class:active={sectorPeriod === p} onclick={() => sectorPeriod = p}>{p.toUpperCase()}</button>
+					{/each}
+				</div>
 			</div>
 			<div class="sector-grid">
-				{#each topSectors as { sector, change }}
-					{@const isPositive = change >= 0}
-					<div class="sector-cell" class:sector-cell--positive={isPositive} class:sector-cell--negative={!isPositive}>
+				{#each topSectors as { sector, avgChange, breadth, count, label }}
+					{@const isPositive = avgChange >= 0}
+					<div class="sector-cell" class:sector-cell--positive={isPositive} class:sector-cell--negative={!isPositive} class:sector-cell--mixed={label === 'MIXED'}>
 						<span class="sector-name">{sector}</span>
 						<div class="sector-bottom">
 							<p class="sector-change" class:sector-change--positive={isPositive} class:sector-change--negative={!isPositive}>
-								{formatPct(change)}
+								{formatPct(avgChange)}
 							</p>
-							<p class="sector-sentiment">{sentimentLabel(change)}</p>
+							<p class="sector-breadth">{Math.round(breadth * 100)}% advancing · {count} stocks</p>
+							<p class="sector-sentiment" class:sentiment--bullish={label === 'BULLISH'} class:sentiment--bearish={label === 'BEARISH'} class:sentiment--mixed={label === 'MIXED'}>{label}</p>
 						</div>
 					</div>
 				{/each}
@@ -281,7 +309,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
-		background: #111417;
+		background: var(--bg);
 	}
 
 	/* Header */
@@ -291,40 +319,40 @@
 		align-items: flex-end;
 	}
 	.header-title {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 1.875rem;
 		font-weight: 900;
 		letter-spacing: -0.03em;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.header-sub {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 12px;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
-		color: #64748b;
+		color: var(--text-faint);
 		margin-top: 4px;
 	}
 	.header-metrics { display: flex; gap: 8px; }
 	.metric-card {
 		padding: 12px 16px;
-		background: #191c1f;
+		background: var(--bg-surface);
 	}
-	.metric-card--green { border-left: 2px solid rgba(1, 245, 160, 0.5); }
-	.metric-card--cyan { border-left: 2px solid rgba(0, 209, 255, 0.5); }
+	.metric-card--green { border-left: 2px solid var(--positive); }
+	.metric-card--cyan { border-left: 2px solid var(--accent); }
 	.metric-label {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
 		text-transform: uppercase;
-		color: #64748b;
+		color: var(--text-faint);
 	}
 	.metric-value {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 18px;
 		font-weight: 700;
 	}
-	.metric-value--green { color: #ceffdf; }
-	.metric-value--cyan { color: #a4e6ff; }
+	.metric-value--green { color: var(--positive-soft); }
+	.metric-value--cyan { color: var(--accent-soft); }
 
 	/* Movers */
 	.movers-row {
@@ -333,9 +361,9 @@
 		gap: 16px;
 	}
 	.mover-card {
-		background: #1d2023;
+		background: var(--bg-elevated);
 		padding: 24px;
-		border-top: 1px solid rgba(60, 73, 78, 0.1);
+		border-top: 1px solid var(--border-subtle);
 	}
 	.mover-header {
 		display: flex;
@@ -344,17 +372,17 @@
 		margin-bottom: 16px;
 	}
 	.mover-title {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
 	}
-	.mover-title--green { color: #ceffdf; }
-	.mover-title--red { color: #ffb4ab; }
+	.mover-title--green { color: var(--positive-soft); }
+	.mover-title--red { color: var(--negative); }
 	.mover-icon { font-size: 16px; }
-	.mover-icon--green { color: #01f5a0; }
-	.mover-icon--red { color: #ffb4ab; }
+	.mover-icon--green { color: var(--positive); }
+	.mover-icon--red { color: var(--negative); }
 	.mover-list { display: flex; flex-direction: column; gap: 12px; }
 	.mover-row {
 		display: flex;
@@ -365,52 +393,52 @@
 		color: inherit;
 		cursor: pointer;
 		padding: 4px 0;
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 14px;
 		width: 100%;
 		transition: color 0.15s;
 	}
-	.mover-row:hover { color: #a4e6ff; }
-	.mover-ticker { color: #e1e2e7; }
+	.mover-row:hover { color: var(--accent-soft); }
+	.mover-ticker { color: var(--text); }
 	.mover-change { font-weight: 700; }
-	.mover-change--green { color: #01f5a0; }
-	.mover-change--red { color: #ffb4ab; }
+	.mover-change--green { color: var(--positive); }
+	.mover-change--red { color: var(--negative); }
 
 	/* Summary card */
 	.summary-card {
-		background: #272a2e;
+		background: var(--bg-hover);
 		padding: 24px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		border-top: 2px solid #00d1ff;
+		border-top: 2px solid var(--accent);
 	}
 	.summary-label {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 11px;
 		text-transform: uppercase;
-		color: #64748b;
+		color: var(--text-faint);
 	}
 	.summary-value {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 2.5rem;
 		font-weight: 900;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.summary-unit {
 		font-size: 1rem;
 		font-weight: 400;
-		color: #64748b;
+		color: var(--text-faint);
 		margin-left: 4px;
 	}
 	.summary-sub {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 12px;
-		color: #64748b;
+		color: var(--text-faint);
 		margin-top: 4px;
 	}
-	.summary-highlight { color: #a4e6ff; font-weight: 700; }
-	.summary-highlight-pct { color: #01f5a0; font-weight: 700; margin-left: 4px; }
+	.summary-highlight { color: var(--accent-soft); font-weight: 700; }
+	.summary-highlight-pct { color: var(--positive); font-weight: 700; margin-left: 4px; }
 	.summary-sparkline { width: 192px; height: 64px; }
 	.sparkline-svg { width: 100%; height: 100%; }
 
@@ -427,19 +455,39 @@
 		margin-bottom: 24px;
 	}
 	.section-label {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 14px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: -0.02em;
-		color: #e1e2e7;
+		color: var(--text);
 	}
+
+	/* Period toggle */
+	.period-toggle {
+		display: flex;
+		gap: 2px;
+	}
+	.period-btn {
+		padding: 4px 10px;
+		border: none;
+		background: transparent;
+		color: var(--text-dim);
+		font-family: var(--font-mono);
+		font-size: 10px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s;
+		text-transform: uppercase;
+	}
+	.period-btn:hover { color: var(--text-muted); background: var(--bg-hover); }
+	.period-btn.active { color: var(--accent); background: var(--accent-dim); }
 
 	/* Sector matrix */
 	.sector-matrix {
-		background: #1d2023;
+		background: var(--bg-elevated);
 		padding: 24px;
-		border-top: 1px solid rgba(60, 73, 78, 0.1);
+		border-top: 1px solid var(--border-subtle);
 	}
 	.sector-grid {
 		display: grid;
@@ -454,44 +502,59 @@
 		justify-content: space-between;
 	}
 	.sector-cell--positive {
-		background: rgba(1, 245, 160, 0.08);
-		border-left: 2px solid #01f5a0;
+		background: var(--positive-bg);
+		border-left: 2px solid var(--positive);
 	}
 	.sector-cell--negative {
-		background: rgba(255, 180, 171, 0.05);
-		border-left: 2px solid rgba(255, 180, 171, 0.4);
+		background: var(--negative-bg);
+		border-left: 2px solid var(--negative);
+	}
+	.sector-cell--mixed {
+		background: var(--neutral-bg);
+		border-left: 2px solid var(--gold);
 	}
 	.sector-name {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
 		text-transform: uppercase;
-		color: #94a3b8;
+		color: var(--text-muted);
 	}
 	.sector-change {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 1.25rem;
 		font-weight: 700;
 	}
-	.sector-change--positive { color: #01f5a0; }
-	.sector-change--negative { color: #ffb4ab; }
-	.sector-sentiment {
-		font-family: 'JetBrains Mono', monospace;
+	.sector-change--positive { color: var(--positive); }
+	.sector-change--negative { color: var(--negative); }
+	.sector-breadth {
+		font-family: var(--font-mono);
 		font-size: 9px;
-		text-transform: uppercase;
-		color: #64748b;
+		color: var(--text-muted);
+		margin-top: 2px;
 	}
+	.sector-sentiment {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-top: 4px;
+	}
+	.sentiment--bullish { color: var(--positive); }
+	.sentiment--bearish { color: var(--negative); }
+	.sentiment--mixed { color: var(--gold); }
 
 	/* Analysis panel */
 	.analysis-panel {
-		background: #1d2023;
+		background: var(--bg-elevated);
 		padding: 24px;
-		border-top: 1px solid #00d1ff;
+		border-top: 1px solid var(--accent);
 	}
 	.analysis-cards { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
 	.analysis-card {
 		padding: 16px;
-		background: #191c1f;
-		border: 1px solid rgba(60, 73, 78, 0.1);
+		background: var(--bg-surface);
+		border: 1px solid var(--border-subtle);
 	}
 	.analysis-header {
 		display: flex;
@@ -500,17 +563,17 @@
 		margin-bottom: 8px;
 	}
 	.analysis-tag {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
 	}
-	.analysis-tag--cyan { color: #a4e6ff; }
-	.analysis-tag--gold { color: #ffd59c; }
+	.analysis-tag--cyan { color: var(--accent-soft); }
+	.analysis-tag--gold { color: var(--gold-soft); }
 	.analysis-badge {
-		background: #00d1ff;
-		color: #001f28;
-		font-family: 'JetBrains Mono', monospace;
+		background: var(--accent);
+		color: var(--accent-on);
+		font-family: var(--font-mono);
 		font-size: 10px;
 		font-weight: 700;
 		padding: 2px 6px;
@@ -521,29 +584,29 @@
 		gap: 8px;
 	}
 	.analysis-big {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 1.875rem;
 		font-weight: 900;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.analysis-unit {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 12px;
-		color: #64748b;
+		color: var(--text-faint);
 		padding-bottom: 4px;
 	}
 	.analysis-desc {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
-		color: #64748b;
+		color: var(--text-faint);
 		margin-top: 8px;
 		line-height: 1.5;
 	}
 
 	/* Screener preview */
 	.screener-preview {
-		background: #1d2023;
-		border-top: 1px solid rgba(60, 73, 78, 0.1);
+		background: var(--bg-elevated);
+		border-top: 1px solid var(--border-subtle);
 	}
 	.screener-preview .section-bar { padding: 16px 24px 0; }
 	.preview-table-wrap { overflow-x: auto; }
@@ -553,29 +616,29 @@
 		text-align: left;
 	}
 	.preview-table thead tr {
-		background: #0b0e11;
-		border-bottom: 1px solid rgba(60, 73, 78, 0.1);
+		background: var(--sidebar-bg);
+		border-bottom: 1px solid var(--border-subtle);
 	}
 	.preview-table th {
 		padding: 16px 24px;
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
-		color: #64748b;
+		color: var(--text-faint);
 	}
 	.preview-table tbody tr {
-		border-bottom: 1px solid rgba(60, 73, 78, 0.05);
+		border-bottom: 1px solid var(--border-subtle);
 		cursor: pointer;
 		transition: background 0.15s;
 	}
-	.preview-table tbody tr:hover { background: rgba(0, 209, 255, 0.05); }
+	.preview-table tbody tr:hover { background: var(--accent-dim); }
 	.preview-table td {
 		padding: 16px 24px;
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 12px;
-		color: #cbd5e1;
+		color: var(--text-secondary);
 	}
 	.ticker-cell {
 		display: flex;
@@ -585,29 +648,29 @@
 	.ticker-badge {
 		width: 32px;
 		height: 32px;
-		background: #323538;
+		background: var(--border);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 9px;
 		font-weight: 900;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.ticker-name {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 12px;
 		font-weight: 700;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.ticker-exchange {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
-		color: #64748b;
+		color: var(--text-faint);
 	}
-	.text-green { color: #01f5a0; font-weight: 700; }
-	.text-red { color: #ffb4ab; font-weight: 700; }
-	.text-cyan { color: #a4e6ff; font-weight: 700; }
+	.text-green { color: var(--positive); font-weight: 700; }
+	.text-red { color: var(--negative); font-weight: 700; }
+	.text-cyan { color: var(--accent-soft); font-weight: 700; }
 	.text-right { text-align: right; }
 
 	/* Footer */
@@ -616,8 +679,8 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 24px;
-		background: #0b0e11;
-		border-top: 1px solid rgba(60, 73, 78, 0.1);
+		background: var(--sidebar-bg);
+		border-top: 1px solid var(--border-subtle);
 		margin: 0 -32px -32px;
 	}
 	.footer-left {
@@ -629,30 +692,30 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
-		color: #64748b;
+		color: var(--text-faint);
 	}
 	.status-dot {
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: #01f5a0;
+		background: var(--positive);
 	}
 	.footer-left > span {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
-		color: #64748b;
+		color: var(--text-faint);
 	}
-	.footer-time { color: #a4e6ff; }
+	.footer-time { color: var(--accent-soft); }
 	.footer-copy {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 10px;
-		color: #475569;
+		color: var(--text-dim);
 	}
 
 	.material-symbols-outlined {

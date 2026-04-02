@@ -8,14 +8,23 @@
 		--bg-elevated: #1d2023;
 		--bg-hover: #272a2e;
 		--border: #323538;
+		--border-subtle: rgba(60, 73, 78, 0.15);
 		--text: #e1e2e7;
+		--text-secondary: #cbd5e1;
 		--text-muted: #8b949e;
 		--text-dim: #484f58;
+		--text-faint: #64748b;
 		--accent: #00d1ff;
+		--accent-soft: #a4e6ff;
 		--accent-dim: #00d1ff20;
+		--accent-on: #001f28;
 		--positive: #01f5a0;
+		--positive-soft: #ceffdf;
+		--positive-on: #002111;
 		--negative: #ffb4ab;
+		--negative-soft: #ffb4ab;
 		--gold: #feb127;
+		--gold-soft: #ffd59c;
 		--chart-grid: #272a2e;
 		--chart-volume: #323538;
 		--positive-bg: #01f5a022;
@@ -35,14 +44,23 @@
 		--bg-elevated: #eef1f5;
 		--bg-hover: #e8ebef;
 		--border: #d1d9e0;
+		--border-subtle: rgba(0, 0, 0, 0.08);
 		--text: #1f2328;
+		--text-secondary: #32383f;
 		--text-muted: #59636e;
 		--text-dim: #8b949e;
+		--text-faint: #6e7781;
 		--accent: #0891b2;
+		--accent-soft: #0e7490;
 		--accent-dim: #0891b218;
+		--accent-on: #ffffff;
 		--positive: #1a7f37;
+		--positive-soft: #1a7f37;
+		--positive-on: #ffffff;
 		--negative: #cf222e;
+		--negative-soft: #cf222e;
 		--gold: #d29922;
+		--gold-soft: #b58318;
 		--chart-grid: #e8ebef;
 		--chart-volume: #d1d9e0;
 		--positive-bg: #1a7f3744;
@@ -70,9 +88,9 @@
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #0b0e11; }
-::-webkit-scrollbar-thumb { background: #323538; }
-::-webkit-scrollbar-thumb:hover { background: #00d1ff; }
+::-webkit-scrollbar-track { background: var(--sidebar-bg); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* Hide TradingView attribution */
 a[href*="tradingview.com"] { display: none !important; }

@@ -13,6 +13,8 @@ export interface StockRow {
 	roe: number | null;
 	margin: number | null;
 	market_cap: number | null;
+	perf_1w: number | null;
+	perf_1m: number | null;
 	perf_1y: number | null;
 	report_quarter: string | null;
 	industry: string | null;

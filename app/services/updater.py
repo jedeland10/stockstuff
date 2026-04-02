@@ -1,7 +1,7 @@
 """Scheduled data refresh using APScheduler."""
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.config import UPDATE_INTERVAL_HOURS
 from app.services.fetcher import fetch_stock_info, fetch_price_history
@@ -9,6 +9,82 @@ from app.database import get_pool
 
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
+
+
+async def compute_performance(conn=None):
+    """Compute 1W, 1M, 1Y performance from price history and update fundamentals.
+
+    For each ticker, finds the closing price on (or nearest before) the reference
+    dates and calculates percentage change vs the most recent close.
+    """
+    should_release = conn is None
+    if conn is None:
+        pool = get_pool()
+        conn = await pool.acquire()
+
+    try:
+        today = date.today()
+        cutoff_1w = (today - timedelta(days=7)).isoformat()
+        cutoff_1m = (today - timedelta(days=30)).isoformat()
+        cutoff_1y = (today - timedelta(days=365)).isoformat()
+
+        rows = await conn.fetch("""
+            WITH latest AS (
+                SELECT DISTINCT ON (ticker) ticker, close AS latest_close, date AS latest_date
+                FROM prices
+                ORDER BY ticker, date DESC
+            ),
+            ref_1w AS (
+                SELECT DISTINCT ON (ticker) ticker, close AS close_1w
+                FROM prices
+                WHERE date <= $1
+                ORDER BY ticker, date DESC
+            ),
+            ref_1m AS (
+                SELECT DISTINCT ON (ticker) ticker, close AS close_1m
+                FROM prices
+                WHERE date <= $2
+                ORDER BY ticker, date DESC
+            ),
+            ref_1y AS (
+                SELECT DISTINCT ON (ticker) ticker, close AS close_1y
+                FROM prices
+                WHERE date <= $3
+                ORDER BY ticker, date DESC
+            )
+            SELECT
+                l.ticker,
+                CASE WHEN w.close_1w IS NOT NULL AND w.close_1w > 0
+                     THEN ROUND(((l.latest_close - w.close_1w) / w.close_1w * 100)::numeric, 2)
+                     ELSE NULL END AS perf_1w,
+                CASE WHEN m.close_1m IS NOT NULL AND m.close_1m > 0
+                     THEN ROUND(((l.latest_close - m.close_1m) / m.close_1m * 100)::numeric, 2)
+                     ELSE NULL END AS perf_1m,
+                CASE WHEN y.close_1y IS NOT NULL AND y.close_1y > 0
+                     THEN ROUND(((l.latest_close - y.close_1y) / y.close_1y * 100)::numeric, 2)
+                     ELSE NULL END AS perf_1y
+            FROM latest l
+            LEFT JOIN ref_1w w ON l.ticker = w.ticker
+            LEFT JOIN ref_1m m ON l.ticker = m.ticker
+            LEFT JOIN ref_1y y ON l.ticker = y.ticker
+        """, cutoff_1w, cutoff_1m, cutoff_1y)
+
+        if rows:
+            await conn.executemany("""
+                UPDATE fundamentals
+                SET perf_1w = $2, perf_1m = $3, perf_1y = $4
+                WHERE ticker = $1
+            """, [
+                (r["ticker"], float(r["perf_1w"]) if r["perf_1w"] is not None else None,
+                 float(r["perf_1m"]) if r["perf_1m"] is not None else None,
+                 float(r["perf_1y"]) if r["perf_1y"] is not None else None)
+                for r in rows
+            ])
+
+        logger.info(f"Performance computed for {len(rows)} tickers (1W/1M/1Y)")
+    finally:
+        if should_release:
+            await get_pool().release(conn)
 
 
 async def refresh_fundamentals():
@@ -97,6 +173,9 @@ async def refresh_prices():
             updated += 1
 
         logger.info(f"Price catch-up done — updated {updated}/{len(tickers)} tickers.")
+
+    # Recompute performance metrics from updated price history
+    await compute_performance()
 
 
 def start_scheduler():

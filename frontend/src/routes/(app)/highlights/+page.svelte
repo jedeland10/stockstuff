@@ -25,9 +25,9 @@
     height: 100%;
   }
   .loading-text {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-faint);
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }

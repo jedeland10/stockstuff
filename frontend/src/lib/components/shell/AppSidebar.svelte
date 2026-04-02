@@ -17,7 +17,7 @@
 	<div class="sidebar-header">
 		<div class="logo-row">
 			<div class="logo-icon">
-				<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 20px; color: #001f28;">query_stats</span>
+				<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 20px; color: var(--accent-on);">query_stats</span>
 			</div>
 			<span class="logo-text">StockLens</span>
 		</div>
@@ -62,11 +62,11 @@
 	.sidebar {
 		width: 16rem;
 		height: 100vh;
-		background: #0b0e11;
+		background: var(--sidebar-bg);
 		display: flex;
 		flex-direction: column;
 		flex-shrink: 0;
-		border-right: 1px solid rgba(60, 73, 78, 0.15);
+		border-right: 1px solid var(--border-subtle);
 		z-index: 60;
 	}
 
@@ -83,31 +83,31 @@
 	.logo-icon {
 		width: 32px;
 		height: 32px;
-		background: #00d1ff;
+		background: var(--accent);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 	.logo-text {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-size: 18px;
 		font-weight: 900;
-		color: #00d1ff;
+		color: var(--accent);
 		letter-spacing: -0.05em;
 		text-transform: uppercase;
 	}
 	.sub-title {
-		font-family: 'Manrope', system-ui, sans-serif;
+		font-family: var(--font-heading);
 		font-weight: 700;
 		font-size: 14px;
-		color: #e1e2e7;
+		color: var(--text);
 	}
 	.sub-label {
-		font-family: 'JetBrains Mono', monospace;
+		font-family: var(--font-mono);
 		font-size: 11px;
 		letter-spacing: 0.15em;
 		text-transform: uppercase;
-		color: #64748b;
+		color: var(--text-faint);
 		margin-top: 2px;
 	}
 
@@ -122,8 +122,8 @@
 		gap: 12px;
 		padding: 12px 24px;
 		border-left: 4px solid transparent;
-		color: #64748b;
-		font-family: 'Inter', system-ui, sans-serif;
+		color: var(--text-faint);
+		font-family: var(--font-ui);
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
@@ -131,20 +131,20 @@
 		text-decoration: none;
 	}
 	.nav-item:hover {
-		color: #cbd5e1;
-		background: rgba(28, 31, 35, 0.5);
+		color: var(--text-secondary);
+		background: var(--bg-hover);
 	}
 	.nav-item.active {
-		color: #00d1ff;
-		border-left-color: #00d1ff;
+		color: var(--accent);
+		border-left-color: var(--accent);
 		font-weight: 700;
 	}
 	.nav-icon { font-size: 20px; }
 	.nav-badge {
 		margin-left: auto;
 		background: rgba(210, 153, 34, 0.15);
-		color: #d29922;
-		font-family: 'JetBrains Mono', monospace;
+		color: var(--gold);
+		font-family: var(--font-mono);
 		font-size: 10px;
 		font-weight: 700;
 		padding: 2px 6px;
@@ -153,26 +153,25 @@
 	.sidebar-footer {
 		margin-top: auto;
 		padding: 24px;
-		border-top: 1px solid rgba(60, 73, 78, 0.1);
+		border-top: 1px solid var(--border-subtle);
 	}
 	.footer-link {
 		display: flex;
 		align-items: center;
 		gap: 12px;
 		padding: 8px 0;
-		color: #64748b;
+		color: var(--text-faint);
 		text-decoration: none;
 		font-size: 14px;
 		transition: color 0.2s;
 	}
-	.footer-link:hover { color: #cbd5e1; }
+	.footer-link:hover { color: var(--text-secondary); }
 	.footer-icon { font-size: 20px; }
 
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 	}
 
-	/* Mobile: hide desktop sidebar, show bottom nav */
 	@media (max-width: 768px) {
 		.sidebar {
 			position: fixed;
@@ -184,7 +183,7 @@
 			height: auto;
 			flex-direction: row;
 			border-right: none;
-			border-top: 1px solid rgba(60, 73, 78, 0.3);
+			border-top: 1px solid var(--border);
 			z-index: 80;
 			padding-bottom: env(safe-area-inset-bottom, 0px);
 		}
@@ -211,7 +210,7 @@
 		}
 		.nav-item.active {
 			border-left-color: transparent;
-			border-top-color: #00d1ff;
+			border-top-color: var(--accent);
 		}
 		.nav-icon { font-size: 22px; }
 		.nav-badge {

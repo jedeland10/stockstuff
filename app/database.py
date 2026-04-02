@@ -130,6 +130,8 @@ async def _run_schema(conn: asyncpg.Connection):
             ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS shares_outstanding DOUBLE PRECISION;
             ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS enterprise_value DOUBLE PRECISION;
             ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS book_value_per_share DOUBLE PRECISION;
+            ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS perf_1w DOUBLE PRECISION;
+            ALTER TABLE fundamentals ADD COLUMN IF NOT EXISTS perf_1m DOUBLE PRECISION;
             ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS current_assets DOUBLE PRECISION;
             ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS current_liabilities DOUBLE PRECISION;
             ALTER TABLE balance_sheet ADD COLUMN IF NOT EXISTS net_fixed_assets DOUBLE PRECISION;

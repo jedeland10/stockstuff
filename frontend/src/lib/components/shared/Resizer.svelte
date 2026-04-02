@@ -46,6 +46,6 @@
     transition: background 0.15s;
   }
   .resizer:hover::after {
-    background: #00bcd4;
+    background: var(--accent);
   }
 </style>

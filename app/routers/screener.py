@@ -19,7 +19,7 @@ async def get_screener(
     allowed_sort = {
         "ticker", "name", "country", "sector", "price", "change_pct",
         "pe", "pb", "ps", "ev_ebitda", "div_yield", "roe", "margin", "market_cap",
-        "perf_1y", "report_quarter", "industry"
+        "perf_1w", "perf_1m", "perf_1y", "report_quarter", "industry"
     }
     if sort_by not in allowed_sort:
         sort_by = "market_cap"
@@ -51,13 +51,13 @@ async def get_screener(
         total = await conn.fetchval(count_sql, *params)
 
         # Determine which table has the sort column
-        fund_cols = {"price", "change_pct", "pe", "pb", "ps", "ev_ebitda", "div_yield", "roe", "margin", "perf_1y", "report_quarter"}
+        fund_cols = {"price", "change_pct", "pe", "pb", "ps", "ev_ebitda", "div_yield", "roe", "margin", "perf_1w", "perf_1m", "perf_1y", "report_quarter"}
         sort_prefix = "f" if sort_by in fund_cols else "s"
 
         sql = f"""
             SELECT s.ticker, s.name, s.country, s.sector, s.market_cap,
                    f.price, f.change_pct, f.pe, f.pb, f.ps, f.ev_ebitda,
-                   f.div_yield, f.roe, f.margin, f.perf_1y, f.report_quarter,
+                   f.div_yield, f.roe, f.margin, f.perf_1w, f.perf_1m, f.perf_1y, f.report_quarter,
                    s.industry
             FROM stocks s
             LEFT JOIN fundamentals f ON s.ticker = f.ticker
@@ -75,7 +75,8 @@ async def get_screener(
             market_cap=r["market_cap"], price=r["price"], change_pct=r["change_pct"],
             pe=r["pe"], pb=r["pb"], ps=r["ps"], ev_ebitda=r["ev_ebitda"],
             div_yield=r["div_yield"], roe=r["roe"], margin=r["margin"],
-            perf_1y=r["perf_1y"], report_quarter=r["report_quarter"], industry=r["industry"],
+            perf_1w=r["perf_1w"], perf_1m=r["perf_1m"], perf_1y=r["perf_1y"],
+            report_quarter=r["report_quarter"], industry=r["industry"],
         ))
 
     return ScreenerResponse(stocks=stocks, total=total)

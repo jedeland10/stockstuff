@@ -84,11 +84,11 @@
     const ma200 = computeMA(closes, 200);
 
     if (ma50.some(v => v !== null)) {
-      const s = chart.addLineSeries({ color: '#f0b90b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const s = chart.addLineSeries({ color: cssVar('--gold'), lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       s.setData(data.map((d, i) => ({ time: d.date, value: ma50[i]! })).filter((d: any) => d.value != null));
     }
     if (ma200.some(v => v !== null)) {
-      const s = chart.addLineSeries({ color: '#da3633', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const s = chart.addLineSeries({ color: cssVar('--negative'), lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       s.setData(data.map((d, i) => ({ time: d.date, value: ma200[i]! })).filter((d: any) => d.value != null));
     }
 
@@ -146,8 +146,8 @@
   <div class="header">
     <span class="title">{ticker} — Candlestick</span>
     <div class="legend">
-      <span style="color:#f0b90b">MA50</span>
-      <span style="color:#da3633">MA200</span>
+      <span style="color:var(--gold)">MA50</span>
+      <span style="color:var(--negative)">MA200</span>
     </div>
   </div>
   <div class="chart-wrap" bind:this={container}></div>
