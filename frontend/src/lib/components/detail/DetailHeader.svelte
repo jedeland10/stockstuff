@@ -30,7 +30,7 @@
 
   <div class="price-row">
     <span class="price">{fmt($companyData.price)}</span>
-    <span class="currency">SEK</span>
+    <span class="currency">EUR</span>
     <span class={($companyData.change_pct ?? 0) >= 0 ? 'change pos' : 'change neg'}>
       {($companyData.change_pct ?? 0) >= 0 ? '+' : ''}{fmt($companyData.change_pct)}%
     </span>
