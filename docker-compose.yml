@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-stockdata}
       POSTGRES_USER: ${POSTGRES_USER:-stockdata}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stockdata}
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stockdata}"]
       interval: 5s
